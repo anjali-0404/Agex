@@ -1,170 +1,137 @@
 'use client';
-
-import React, { useState } from 'react';
+import { useState } from 'react';
 import AppShell from '@/components/AppShell';
-import { 
-  BarChart3, 
-  TrendingDown, 
-  TrendingUp, 
-  Download,
-  Calendar,
-  ShieldAlert,
-  ShieldCheck,
-  Users
-} from 'lucide-react';
-
-const StatCard = ({ title, value, icon: Icon, trend, trendValue, subtitle }) => (
-  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col">
-    <div className="flex justify-between items-start mb-4">
-      <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
-        <Icon size={24} />
-      </div>
-      {trend && (
-        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${trend === 'up' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-          {trend === 'up' ? <TrendingUp size={14} className="mr-1" /> : <TrendingDown size={14} className="mr-1" />}
-          {trendValue}
-        </span>
-      )}
-    </div>
-    <h3 className="text-gray-500 text-sm font-medium">{title}</h3>
-    <div className="mt-2 flex items-baseline gap-2">
-      <span className="text-3xl font-bold text-gray-900">{value}</span>
-      {subtitle && <span className="text-sm text-gray-500">{subtitle}</span>}
-    </div>
-  </div>
-);
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('7d');
+  const [exported, setExported] = useState(false);
+
+  const kpis = [
+    { title: 'Overall Safety Score', value: '88/100', trend: '+2%', isPositive: true, icon: 'shield', color: '#10b981' },
+    { title: 'Incidents This Week', value: '12', trend: '-25%', isPositive: true, icon: 'warning', color: '#f59e0b' },
+    { title: 'Safe Journeys Logged', value: '147', trend: '+14%', isPositive: true, icon: 'directions_walk', color: '#6366f1' },
+    { title: 'Community Trust Rate', value: '94%', trend: '+1%', isPositive: true, icon: 'verified', color: '#22d3ee' },
+  ];
+
+  const areaData = [
+    { zone: 'North Precinct', score: 65, height: '65%' },
+    { zone: 'South Corridor', score: 45, height: '45%' },
+    { zone: 'East Waterfront', score: 80, height: '80%' },
+    { zone: 'West Side', score: 50, height: '50%' },
+    { zone: 'Downtown', score: 95, height: '95%', highlight: true },
+    { zone: 'Suburbs', score: 75, height: '75%' },
+    { zone: 'Campus', score: 85, height: '85%' },
+  ];
 
   const handleExport = () => {
-    alert('Mock Download Triggered: safety_report.pdf');
+    setExported(true);
+    setTimeout(() => setExported(false), 3000);
   };
 
   return (
     <AppShell>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+      <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
+        
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Safety Analytics</h1>
-            <p className="text-gray-500">Overview of community safety metrics and incidents.</p>
+            <h1 style={{ fontSize: 28, fontWeight: 900 }} className="grad-text">Safety Analytics</h1>
+            <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 4 }}>
+              Comprehensive real-time telemetry and incident breakdown
+            </p>
           </div>
-          
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <select 
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
-              className="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
+              className="input-glass"
+              style={{ padding: '8px 16px', borderRadius: 20, width: 'auto' }}>
               <option value="24h">Last 24 Hours</option>
               <option value="7d">Last 7 Days</option>
               <option value="30d">Last 30 Days</option>
-              <option value="1y">Last 1 Year</option>
+              <option value="1y">Past Year</option>
             </select>
-            
-            <button 
-              onClick={handleExport}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors"
-            >
-              <Download size={18} />
-              Export
+
+            <button onClick={handleExport} className="btn-primary">
+              <span className="icon">download</span> {exported ? 'Exporting PDF...' : 'Export Report'}
             </button>
           </div>
         </div>
 
-        {/* KPI Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard 
-            title="Overall Safety Score" 
-            value="88" 
-            subtitle="/ 100"
-            icon={ShieldCheck} 
-            trend="up" 
-            trendValue="+2%" 
-          />
-          <StatCard 
-            title="Incidents This Week" 
-            value="12" 
-            icon={ShieldAlert} 
-            trend="down" 
-            trendValue="-25%" 
-          />
-          <StatCard 
-            title="Safe Journeys" 
-            value="147" 
-            icon={Calendar} 
-            trend="up" 
-            trendValue="+14%" 
-          />
-          <StatCard 
-            title="Community Verification" 
-            value="94%" 
-            icon={Users} 
-            trend="up" 
-            trendValue="+1%" 
-          />
+        {/* KPI Cards Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+          {kpis.map((k, idx) => (
+            <div key={idx} className="glass animate-in" style={{ padding: 24, animationDelay: `${idx * 0.1}s` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ width: 42, height: 42, borderRadius: 12, background: `${k.color}20`, border: `1px solid ${k.color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: k.color }}>
+                  <span className="icon" style={{ fontSize: 22 }}>{k.icon}</span>
+                </div>
+                <span style={{ fontSize: 12, fontWeight: 700, padding: '2px 8px', borderRadius: 12, background: k.isPositive ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', color: k.isPositive ? '#10b981' : '#ef4444' }}>
+                  {k.trend}
+                </span>
+              </div>
+              <div style={{ fontSize: 28, fontWeight: 900, marginTop: 16, color: '#f1f5f9' }}>{k.value}</div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>{k.title}</div>
+            </div>
+          ))}
         </div>
 
-        {/* Charts Area */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Area Safety Breakdown (Mocked Chart) */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-semibold text-gray-900">Area Safety Breakdown</h2>
-              <button className="text-gray-400 hover:text-gray-600"><BarChart3 size={20} /></button>
-            </div>
-            <div className="h-64 flex items-end justify-between gap-2 px-2">
-              {[65, 45, 80, 50, 95, 75, 85].map((val, i) => (
-                <div key={i} className="w-full bg-blue-100 rounded-t-md relative group">
-                  <div 
-                    className="absolute bottom-0 w-full bg-blue-500 rounded-t-md transition-all duration-500" 
-                    style={{ height: `${val}%` }}
-                  ></div>
-                  <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded">
-                    {val}
-                  </div>
+        {/* Charts Row */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 20 }}>
+          
+          {/* Area Safety Breakdown Bar Chart */}
+          <div className="glass animate-in delay-2" style={{ padding: 28 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>Area Safety Breakdown</h3>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 24 }}>Zone safety index score out of 100</p>
+
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 180, gap: 12 }}>
+              {areaData.map((item, idx) => (
+                <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, height: '100%', justifyContent: 'flex-end' }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: item.highlight ? '#22d3ee' : 'var(--text-muted)' }}>{item.score}</span>
+                  <div style={{
+                    width: '100%',
+                    height: item.height,
+                    borderRadius: 8,
+                    background: item.highlight
+                      ? 'linear-gradient(180deg, #22d3ee, #6366f1)'
+                      : 'linear-gradient(180deg, rgba(99,102,241,0.4), rgba(99,102,241,0.15))',
+                    boxShadow: item.highlight ? '0 0 16px rgba(34,211,238,0.5)' : 'none',
+                    transition: 'all 0.5s ease'
+                  }} />
+                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', textAlign: 'center' }}>
+                    {item.zone}
+                  </span>
                 </div>
               ))}
             </div>
-            <div className="flex justify-between mt-4 text-xs text-gray-500 font-medium">
-              <span>North</span>
-              <span>South</span>
-              <span>East</span>
-              <span>West</span>
-              <span>Downtown</span>
-              <span>Suburbs</span>
-              <span>Campus</span>
-            </div>
           </div>
 
-          {/* Incident Heatmap (Mocked Matrix) */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6">Incident Heatmap (Weekly)</h2>
-            <div className="flex flex-col h-64 justify-between">
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500 w-8">{day}</span>
-                  <div className="flex-1 flex gap-1">
-                    {Array.from({ length: 12 }).map((_, j) => {
-                      // Randomize heatmap colors
-                      const intensity = Math.random();
-                      const bgColor = intensity > 0.8 ? 'bg-red-500' : intensity > 0.5 ? 'bg-orange-300' : 'bg-green-100';
+          {/* Weekly Incident Heatmap Matrix */}
+          <div className="glass animate-in delay-3" style={{ padding: 28 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>Incident Heatmap (Weekly)</h3>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 20 }}>Incident risk distribution by time slot</p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, dIdx) => (
+                <div key={day} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)', width: 36 }}>{day}</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, flex: 1 }}>
+                    {['Morning', 'Afternoon', 'Evening', 'Night'].map((time, tIdx) => {
+                      const risk = (dIdx + tIdx * 2) % 3;
+                      const bg = risk === 0 ? 'rgba(16,185,129,0.2)' : risk === 1 ? 'rgba(245,158,11,0.3)' : 'rgba(239,68,68,0.4)';
                       return (
-                        <div key={j} className={`h-6 flex-1 rounded-sm ${bgColor} hover:opacity-75 cursor-pointer transition-opacity`}></div>
+                        <div key={time} style={{ background: bg, height: 20, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }} title={`${day} ${time}`} />
                       );
                     })}
                   </div>
                 </div>
               ))}
             </div>
-            <div className="flex justify-between ml-10 mt-2 text-xs text-gray-400">
-              <span>12am</span>
-              <span>6am</span>
-              <span>12pm</span>
-              <span>6pm</span>
-            </div>
           </div>
+
         </div>
+
       </div>
     </AppShell>
   );
