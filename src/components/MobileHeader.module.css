@@ -1,0 +1,37 @@
+.header {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  height: var(--header-height);
+  background: rgba(8, 12, 24, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 50;
+}
+.brand {
+  display: flex; align-items: center; gap: 8px;
+}
+.logoBadge {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  display: flex; align-items: center; justify-content: center;
+}
+.title { font-size: 16px; font-weight: 700; }
+.pageTitle { font-size: 14px; font-weight: 600; color: var(--text-secondary); }
+.avatarBtn { display: block; }
+.avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(99,102,241,0.4);
+  object-fit: cover;
+}
+
+@media (max-width: 768px) {
+  .header { display: flex; }
+}
