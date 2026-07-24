@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AegisAI - Community</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #080c18;
+            --primary: #6366f1;
+            --secondary: #a855f7;
+            --cyan: #22d3ee;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --glass-bg: rgba(255, 255, 255, 0.04);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 15% 30%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 85% 70%, rgba(168, 85, 247, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(34, 211, 238, 0.05) 0%, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Glassmorphism utility */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+        }
+
+        .glass-btn {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 9999px;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .glass-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: rgba(8, 12, 24, 0.95);
+            border-right: 1px solid var(--glass-border);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            position: fixed;
+            height: 100vh;
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-grow: 1;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            color: var(--text-main);
+            background: var(--glass-bg);
+        }
+
+        .nav-link.active {
+            color: var(--text-main);
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        
+        .feed-container {
+            width: 100%;
+            max-width: 680px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            padding-bottom: 80px;
+        }
+
+        /* Stats Banner */
+        .stats-banner {
+            padding: 24px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .stats-banner span {
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 20px;
+            font-weight: 700;
+            margin-right: 4px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .stat-divider {
+            color: var(--glass-border);
+        }
+
+        /* Tabs */
+        .tab-row {
+            display: flex;
+            gap: 32px;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0;
+            margin-bottom: 8px;
+        }
+
+        .tab {
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 12px 0;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s;
+        }
+
+        .tab:hover {
+            color: var(--text-main);
+        }
+
+        .tab.active {
+            color: var(--text-main);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 3px 3px 0 0;
+            box-shadow: 0 -2px 10px rgba(99, 102, 241, 0.6);
+        }
+
+        /* Filter Chips */
+        .filters {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 4px 0 12px 0;
+        }
+        
+        .filters::-webkit-scrollbar { display: none; }
+
+        .filter-chip {
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        
+        .filter-chip.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Post Cards */
+        .post-card {
+            padding: 24px;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: fadeUp 0.5s forwards;
+            opacity: 0;
+        }
+
+        .post-card:nth-child(1) { animation-delay: 0.1s; }
+        .post-card:nth-child(2) { animation-delay: 0.2s; }
+        .post-card:nth-child(3) { animation-delay: 0.3s; }
+
+        .post-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-meta h3 {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .user-meta p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge.amber { background: rgba(245, 158, 11, 0.15); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge.green { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge.red { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        .post-location {
+            font-size: 13px;
+            color: var(--cyan);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+        
+        .post-location span { font-size: 16px; }
+
+        .post-content {
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .post-actions {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            padding-top: 16px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .action-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .action-btn:hover { color: var(--primary); }
+        
+        .verified-stamp {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--cyan);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* FAB */
+        @keyframes pulseRing {
+            0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5); }
+            70% { box-shadow: 0 0 0 20px rgba(99, 102, 241, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+            animation: pulseRing 2s infinite;
+            transition: transform 0.2s;
+            z-index: 20;
+        }
+
+        .fab:hover {
+            transform: scale(1.1);
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mobile nav hidden on desktop */
+        .mobile-nav { display: none; }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main-content { margin-left: 0; padding: 20px 16px; }
+            .fab { bottom: 80px; right: 20px; }
+            
+            .mobile-nav {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                background: rgba(8, 12, 24, 0.95);
+                border-top: 1px solid var(--glass-border);
+                backdrop-filter: blur(20px);
+                justify-content: space-around;
+                padding: 12px;
+                z-index: 50;
+            }
+            .mobile-nav-item {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+                color: var(--text-muted);
+                text-decoration: none;
+                font-size: 11px;
+            }
+            .mobile-nav-item.active { color: var(--primary); }
+            
+            .stats-banner { flex-direction: column; gap: 8px; }
+            .stat-divider { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="logo">
+            <span class="material-symbols-rounded">shield</span>
+            AegisAI
+        </div>
+        <nav class="nav-links">
+            <a href="#" class="nav-link">
+                <span class="material-symbols-rounded">dashboard</span>
+                Dashboard
+            </a>
+            <a href="#" class="nav-link">
+                <span class="material-symbols-rounded">map</span>
+                Safety Map
+            </a>
+            <a href="#" class="nav-link active">
+                <span class="material-symbols-rounded">forum</span>
+                Community
+            </a>
+            <a href="#" class="nav-link">
+                <span class="material-symbols-rounded">smart_toy</span>
+                Safety Assistant
+            </a>
+            <a href="#" class="nav-link">
+                <span class="material-symbols-rounded">settings</span>
+                Settings
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div class="feed-container">
+            
+            <div class="glass stats-banner">
+                <div class="stat-item"><span class="gradient-text">2,847</span> <span>reports this month</span></div>
+                <div class="stat-divider">•</div>
+                <div class="stat-item"><span class="gradient-text">156</span> <span>resolved</span></div>
+                <div class="stat-divider">•</div>
+                <div class="stat-item"><span class="gradient-text">94%</span> <span>feel safer</span></div>
+            </div>
+
+            <div class="tab-row">
+                <div class="tab">All</div>
+                <div class="tab active">Nearby</div>
+                <div class="tab">Following</div>
+            </div>
+
+            <div class="filters">
+                <button class="glass-btn filter-chip active">All Types</button>
+                <button class="glass-btn filter-chip">Harassment</button>
+                <button class="glass-btn filter-chip">Lighting</button>
+                <button class="glass-btn filter-chip">Suspicious</button>
+                <button class="glass-btn filter-chip">Safe Zone</button>
+            </div>
+
+            <!-- Card 1 -->
+            <div class="glass post-card">
+                <div class="post-header">
+                    <div class="user-info">
+                        <div class="user-avatar"><span class="material-symbols-rounded">person</span></div>
+                        <div class="user-meta">
+                            <h3>Anonymous User</h3>
+                            <p>2h ago</p>
+                        </div>
+                    </div>
+                    <div class="badge amber">Streetlight Outage</div>
+                </div>
+                <div class="post-location">
+                    <span class="material-symbols-rounded">location_on</span>
+                    Oak &amp; 5th Ave, 0.2mi
+                </div>
+                <div class="post-content">
+                    Streetlight has been out for 3 days. Very dark at night.
+                </div>
+                <div class="post-actions">
+                    <button class="action-btn"><span class="material-symbols-rounded">stat_3</span> 24</button>
+                    <button class="action-btn"><span class="material-symbols-rounded">chat_bubble</span> 3</button>
+                    <div class="verified-stamp">
+                        <span class="material-symbols-rounded">verified</span> Verified
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="glass post-card">
+                <div class="post-header">
+                    <div class="user-info">
+                        <div class="user-avatar"><span class="material-symbols-rounded">account_circle</span></div>
+                        <div class="user-meta">
+                            <h3>SafetyFirst_2024</h3>
+                            <p>5h ago</p>
+                        </div>
+                    </div>
+                    <div class="badge green">Safe Zone</div>
+                </div>
+                <div class="post-location">
+                    <span class="material-symbols-rounded">location_on</span>
+                    City Library, 0.5mi
+                </div>
+                <div class="post-content">
+                    Library is staying open until 10pm this week, well-lit and secure.
+                </div>
+                <div class="post-actions">
+                    <button class="action-btn"><span class="material-symbols-rounded">stat_3</span> 67</button>
+                    <button class="action-btn"><span class="material-symbols-rounded">chat_bubble</span> 8</button>
+                </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="glass post-card">
+                <div class="post-header">
+                    <div class="user-info">
+                        <div class="user-avatar"><span class="material-symbols-rounded">face</span></div>
+                        <div class="user-meta">
+                            <h3>NightWalker</h3>
+                            <p>Yesterday</p>
+                        </div>
+                    </div>
+                    <div class="badge red">Suspicious Activity</div>
+                </div>
+                <div class="post-location">
+                    <span class="material-symbols-rounded">location_on</span>
+                    Park Entrance, 1.1mi
+                </div>
+                <div class="post-content">
+                    Suspicious person lingering near park entrance around 9pm.
+                </div>
+                <div class="post-actions">
+                    <button class="action-btn"><span class="material-symbols-rounded">stat_3</span> 41</button>
+                    <button class="action-btn"><span class="material-symbols-rounded">chat_bubble</span> 12</button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <button class="fab">
+        <span class="material-symbols-rounded">add</span>
+    </button>
+
+    <nav class="mobile-nav">
+        <a href="#" class="mobile-nav-item"><span class="material-symbols-rounded">home</span>Home</a>
+        <a href="#" class="mobile-nav-item"><span class="material-symbols-rounded">map</span>Map</a>
+        <a href="#" class="mobile-nav-item active"><span class="material-symbols-rounded">forum</span>Community</a>
+        <a href="#" class="mobile-nav-item"><span class="material-symbols-rounded">person</span>Profile</a>
+    </nav>
+
+</body>
+</html>

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AegisAI Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #080c18;
+      --primary: #6366f1;
+      --secondary: #a855f7;
+      --accent: #22d3ee;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --sidebar-w: 280px;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(ellipse 80% 60% at 20% 0%, rgba(99,102,241,0.15) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 100%, rgba(168,85,247,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(34,211,238,0.05) 0%, transparent 70%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* Typography */
+    h1, h2, h3, h4 { font-weight: 700; margin-bottom: 0.5rem; }
+    h1 { font-size: 1.75rem; }
+    h2 { font-size: 1.25rem; }
+    p { color: var(--text-muted); font-size: 0.95rem; }
+    .text-gradient {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Glass Card */
+    .glass-card { 
+      background: rgba(255,255,255,0.04); 
+      backdrop-filter: blur(20px); 
+      -webkit-backdrop-filter: blur(20px); 
+      border: 1px solid rgba(255,255,255,0.1); 
+      box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08); 
+      border-radius: 20px; 
+      transition: all 0.25s ease;
+      padding: 1.5rem;
+      animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .glass-card:hover { 
+      background: rgba(255,255,255,0.07); 
+      border-color: rgba(255,255,255,0.15); 
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(99,102,241,0.2); 
+      transform: translateY(-2px); 
+    }
+
+    /* Animations */
+    @keyframes fade-up { 
+      from { opacity: 0; transform: translateY(20px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    }
+    @keyframes aegis-pulse { 
+      0% { opacity: 0.7; transform: scale(0.9); box-shadow: 0 0 0 0 rgba(34,211,238,0.4); } 
+      70% { box-shadow: 0 0 0 10px rgba(34,211,238,0); }
+      100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(34,211,238,0); } 
+    }
+    @keyframes sos-ring { 
+      0% { transform: scale(1); opacity: 0.8; } 
+      100% { transform: scale(2.2); opacity: 0; } 
+    }
+    @keyframes draw-stroke {
+      to { stroke-dashoffset: 25; } /* 88% of 200 = 176, 200-176 = 24 */
+    }
+    @keyframes grow-bar {
+      from { transform: scaleY(0); }
+      to { transform: scaleY(1); }
+    }
+
+    /* Sidebar Desktop */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: rgba(8,12,24,0.95);
+      backdrop-filter: blur(24px);
+      border-right: 1px solid rgba(255,255,255,0.08);
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      z-index: 50;
+      padding: 2rem 1.5rem;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 3rem;
+    }
+    .brand img { width: 40px; height: 40px; border-radius: 12px; }
+    .brand h2 { margin: 0; font-size: 1.5rem; }
+    .brand-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: -2px; }
+
+    .nav-menu { display: flex; flex-direction: column; gap: 0.5rem; flex-grow: 1; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+    .nav-item:hover {
+      background: rgba(255,255,255,0.05);
+      color: var(--text-main);
+    }
+    .nav-item.active {
+      background: rgba(99,102,241,0.2);
+      border-color: rgba(99,102,241,0.5);
+      color: var(--primary);
+    }
+    .nav-item.active .material-symbols-rounded { color: var(--primary); }
+
+    .sos-btn-sidebar {
+      position: relative;
+      background: linear-gradient(135deg, #ef4444, #b91c1c);
+      color: white;
+      border: none;
+      padding: 16px;
+      border-radius: 14px;
+      font-weight: 600;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      overflow: visible;
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+      transition: transform 0.2s;
+    }
+    .sos-btn-sidebar:hover { transform: translateY(-2px); }
+    .sos-btn-sidebar::before, .sos-btn-sidebar::after {
+      content: ''; position: absolute; inset: 0; border-radius: inherit; border: 2px solid #ef4444; opacity: 0; z-index: -1;
+    }
+    .sos-btn-sidebar::before { animation: sos-ring 2s linear infinite; }
+    .sos-btn-sidebar::after { animation: sos-ring 2s linear infinite 1s; }
+
+    /* Main Content */
+    .main-content {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      padding: 2.5rem;
+      max-width: 1400px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 2.5rem;
+      animation: fade-up 0.6s both;
+    }
+    .user-info { display: flex; align-items: center; gap: 16px; }
+    .user-info img { width: 56px; height: 56px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.1); }
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(34, 197, 94, 0.1);
+      color: #4ade80;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      margin-top: 4px;
+    }
+    .pulse-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #4ade80;
+      animation: aegis-pulse 2s infinite;
+    }
+    .aegis-status { display: flex; align-items: center; gap: 8px; color: var(--accent); font-size: 0.9rem; font-weight: 500; }
+    .aegis-orb {
+      width: 12px; height: 12px; border-radius: 50%; background: var(--accent);
+      box-shadow: 0 0 10px var(--accent); animation: aegis-pulse 2s infinite alternate;
+    }
+
+    /* Bento Grid */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-auto-rows: minmax(180px, auto);
+      gap: 1.5rem;
+    }
+    .bento-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .bento-card::before {
+      content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    }
+    
+    /* Grid Spans */
+    .span-4 { grid-column: span 4; }
+    .span-8 { grid-column: span 8; }
+    .span-6 { grid-column: span 6; }
+    .span-12 { grid-column: span 12; }
+    .row-span-2 { grid-row: span 2; }
+
+    /* Safety Index Card */
+    .safety-index-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    .donut-container { position: relative; width: 140px; height: 140px; margin: 1rem auto; }
+    .donut-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .donut-bg { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 8; }
+    .donut-fill { 
+      fill: none; stroke: var(--primary); stroke-width: 8; stroke-dasharray: 251.2; stroke-dashoffset: 251.2; 
+      stroke-linecap: round; filter: drop-shadow(0 0 6px var(--primary)); animation: draw-stroke 1.5s ease-out forwards 0.3s;
+    }
+    .donut-text {
+      position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .donut-score { font-size: 2.5rem; font-weight: 900; line-height: 1; color: var(--text-main); }
+    .donut-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+
+    /* AI Route Card */
+    .ai-route-card { border-top: 1px solid rgba(34,211,238,0.3); background: linear-gradient(180deg, rgba(34,211,238,0.05) 0%, rgba(255,255,255,0.02) 100%); }
+    .route-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .route-icon { background: rgba(34,211,238,0.1); color: var(--accent); padding: 8px; border-radius: 12px; }
+    .route-time { font-size: 2.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem; }
+    .route-desc { color: var(--text-muted); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 4px; }
+    .btn-primary {
+      background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; width: 100%; text-align: center;
+    }
+    .btn-primary:hover { background: #4f46e5; box-shadow: 0 4px 15px rgba(99,102,241,0.4); }
+
+    /* Quick Actions */
+    .quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; height: 100%; align-content: space-between; }
+    .action-btn {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 1.5rem 1rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--text-main); font-weight: 500; cursor: pointer; transition: all 0.2s;
+    }
+    .action-btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); transform: translateY(-3px); }
+    .action-btn .material-symbols-rounded { font-size: 2rem; color: var(--secondary); }
+    .action-btn.sos { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #fca5a5; }
+    .action-btn.sos:hover { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; }
+    .action-btn.sos .material-symbols-rounded { color: #ef4444; }
+
+    /* Nearby Alerts */
+    .alerts-list { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; }
+    .alert-item {
+      display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); border-left-width: 4px;
+    }
+    .alert-item.error { border-left-color: #ef4444; background: linear-gradient(90deg, rgba(239,68,68,0.05) 0%, transparent 100%); }
+    .alert-item.warn { border-left-color: #f59e0b; background: linear-gradient(90deg, rgba(245,158,11,0.05) 0%, transparent 100%); }
+    .alert-item.info { border-left-color: var(--accent); background: linear-gradient(90deg, rgba(34,211,238,0.05) 0%, transparent 100%); }
+    .alert-item .material-symbols-rounded { font-size: 1.25rem; opacity: 0.8; }
+    .alert-text { font-size: 0.9rem; font-weight: 500; flex: 1; }
+    .alert-time { font-size: 0.75rem; color: var(--text-muted); }
+
+    /* Weather */
+    .weather-card { display: flex; flex-direction: column; justify-content: space-between; }
+    .weather-top { display: flex; justify-content: space-between; align-items: center; }
+    .weather-icon { font-size: 3rem; color: #fbbf24; }
+    .weather-temp { font-size: 3rem; font-weight: 700; }
+    .weather-desc { font-size: 1rem; color: var(--text-muted); margin-top: auto; }
+    .weather-meta { display: flex; justify-content: space-between; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; color: var(--text-muted); }
+
+    /* Area Trend Chart */
+    .trend-card { display: flex; flex-direction: column; }
+    .chart-container { display: flex; align-items: flex-end; justify-content: space-between; flex: 1; margin-top: 1rem; padding-bottom: 20px; position: relative; }
+    .chart-container::after { content: ''; position: absolute; bottom: 20px; left: 0; width: 100%; height: 1px; background: rgba(255,255,255,0.1); }
+    .bar-wrapper { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; height: 100%; justify-content: flex-end; }
+    .bar {
+      width: 60%; max-width: 30px; background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%); border-radius: 4px 4px 0 0; transform-origin: bottom; transform: scaleY(0); animation: grow-bar 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    .bar-label { font-size: 0.75rem; color: var(--text-muted); position: absolute; bottom: 0; }
+
+    /* Staggered Animations */
+    .bento-card:nth-child(1) { animation-delay: 0.1s; }
+    .bento-card:nth-child(2) { animation-delay: 0.2s; }
+    .bento-card:nth-child(3) { animation-delay: 0.3s; }
+    .bento-card:nth-child(4) { animation-delay: 0.4s; }
+    .bento-card:nth-child(5) { animation-delay: 0.5s; }
+    .bento-card:nth-child(6) { animation-delay: 0.6s; }
+    
+    .bar-wrapper:nth-child(1) .bar { animation-delay: 0.4s; }
+    .bar-wrapper:nth-child(2) .bar { animation-delay: 0.5s; }
+    .bar-wrapper:nth-child(3) .bar { animation-delay: 0.6s; }
+    .bar-wrapper:nth-child(4) .bar { animation-delay: 0.7s; }
+    .bar-wrapper:nth-child(5) .bar { animation-delay: 0.8s; }
+    .bar-wrapper:nth-child(6) .bar { animation-delay: 0.9s; }
+
+    /* Bottom Nav (Mobile) */
+    .bottom-nav { display: none; }
+
+    @media (max-width: 1024px) {
+      .sidebar { display: none; }
+      .main-content { margin-left: 0; padding: 1.5rem; padding-bottom: 80px; }
+      .span-4, .span-6, .span-8 { grid-column: span 12; }
+      .bottom-nav {
+        display: flex; justify-content: space-around; align-items: center; position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(8,12,24,0.9); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.1); padding: 12px 0; z-index: 100; padding-bottom: calc(12px + env(safe-area-inset-bottom));
+      }
+      .nav-item-mob { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); text-decoration: none; font-size: 0.7rem; }
+      .nav-item-mob.active { color: var(--primary); }
+      .nav-item-mob .material-symbols-rounded { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar (Desktop) -->
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9wgK42B30HMSVXU5UhM-OoUsQExuC1tXb4FKUtWFam-jpDTB0dI6IQHI6zxs-FnShk4mTgR2_Pbq3wWhLpPcMRYUDkEWA0eC66j4OMPJKyvvf2e5hUEl7soKfNKnToRSBKHc4AB6QvS6I4ibzUxnbj3FqcD4AkdqvbST9YzrDKLpspJlzN_YVqBWhZzGQzrmkSO1oP-1v5RzhCpZ7tinwxwkdnGKBPCaZbFefiVCNGAJrONxEfJwwsExpc48BBXM9Xm-DOax-01eP" alt="AegisAI Logo">
+      <div>
+        <h2 class="text-gradient">AegisAI</h2>
+        <div class="brand-sub">Empathetic Futurism</div>
+      </div>
+    </div>
+
+    <nav class="nav-menu">
+      <a href="#" class="nav-item active"><span class="material-symbols-rounded">dashboard</span> Dashboard</a>
+      <a href="#" class="nav-item"><span class="material-symbols-rounded">map</span> Route Planner</a>
+      <a href="#" class="nav-item"><span class="material-symbols-rounded">notifications</span> Alerts</a>
+      <a href="#" class="nav-item"><span class="material-symbols-rounded">history</span> History</a>
+      <a href="#" class="nav-item"><span class="material-symbols-rounded">settings</span> Settings</a>
+    </nav>
+
+    <button class="sos-btn-sidebar">
+      <span class="material-symbols-rounded">emergency</span> Emergency SOS
+    </button>
+  </aside>
+
+  <!-- Bottom Nav (Mobile) -->
+  <nav class="bottom-nav">
+    <a href="#" class="nav-item-mob active"><span class="material-symbols-rounded">dashboard</span> Home</a>
+    <a href="#" class="nav-item-mob"><span class="material-symbols-rounded">map</span> Routes</a>
+    <a href="#" class="nav-item-mob" style="color: #ef4444;"><span class="material-symbols-rounded">emergency</span> SOS</a>
+    <a href="#" class="nav-item-mob"><span class="material-symbols-rounded">notifications</span> Alerts</a>
+    <a href="#" class="nav-item-mob"><span class="material-symbols-rounded">person</span> Profile</a>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <header class="header">
+      <div>
+        <div class="aegis-status"><div class="aegis-orb"></div> Aegis Monitoring Active</div>
+        <h1>Welcome back, Sarah</h1>
+        <p>Your safety network is online and scanning.</p>
+      </div>
+      <div class="user-info">
+        <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
+          <div class="status-indicator"><div class="pulse-dot"></div> Safe Status</div>
+        </div>
+        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBsTCDzWbsWn99APYomqRDkbS5k7UncVZ_w03EAuZRonCUwvscGvzAhT0gIUajYiNYib4IYOGGdstdGezp0E1_BC1J3vB9UagdRkFbw1BJxIIv8XV1LvUV0o9THrKzkjPS57dRT5hish5X_QgWA74J_OaSSQuBdH8w-TPKdsemLiU576c9A7yae9DFG56iiEfVljHu8c6svDS86psLGXi307-_x9_fRjq8UbtcDk4IzQEEQ2NEceF5DuYzAGO4-nGOyoGRmiI3BkPgo" alt="Sarah Profile">
+      </div>
+    </header>
+
+    <div class="bento-grid">
+      
+      <!-- Safety Index -->
+      <div class="glass-card bento-card span-4 safety-index-card">
+        <h3>Safety Index</h3>
+        <p>Current area score</p>
+        <div class="donut-container">
+          <svg viewBox="0 0 100 100" class="donut-svg">
+            <circle cx="50" cy="50" r="40" class="donut-bg"></circle>
+            <circle cx="50" cy="50" r="40" class="donut-fill"></circle>
+          </svg>
+          <div class="donut-text">
+            <span class="donut-score">88</span>
+            <span class="donut-label">/ 100</span>
+          </div>
+        </div>
+        <p style="color: #4ade80; font-weight: 500;">Optimal safety level</p>
+      </div>
+
+      <!-- AI Route -->
+      <div class="glass-card bento-card span-8 ai-route-card row-span-2" style="display: flex; flex-direction: column;">
+        <div class="route-header">
+          <div>
+            <h3>Evening Commute</h3>
+            <p>Optimized for current conditions</p>
+          </div>
+          <div class="route-icon"><span class="material-symbols-rounded">route</span></div>
+        </div>
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: flex-start;">
+          <div class="route-time">24 <span style="font-size: 1.25rem; font-weight: 500; color: var(--text-muted);">mins</span></div>
+          <div class="route-desc"><span class="material-symbols-rounded" style="font-size: 1rem;">directions_car</span> via Main St (Safest path)</div>
+        </div>
+        <button class="btn-primary">Start Navigation</button>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="span-4" style="display: grid; grid-template-rows: 1fr; animation: fade-up 0.6s both; animation-delay: 0.3s;">
+        <div class="quick-actions">
+          <div class="action-btn">
+            <span class="material-symbols-rounded">report_problem</span>
+            <span>Report</span>
+          </div>
+          <div class="action-btn">
+            <span class="material-symbols-rounded">map</span>
+            <span>Plan</span>
+          </div>
+          <div class="action-btn sos">
+            <span class="material-symbols-rounded">sos</span>
+            <span>SOS</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nearby Alerts -->
+      <div class="glass-card bento-card span-6">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h3>Nearby Alerts</h3>
+          <span class="material-symbols-rounded" style="color: var(--text-muted); cursor: pointer;">more_horiz</span>
+        </div>
+        <div class="alerts-list">
+          <div class="alert-item error">
+            <span class="material-symbols-rounded" style="color: #ef4444;">lightbulb</span>
+            <span class="alert-text">Streetlight Outage</span>
+            <span class="alert-time">0.2 mi</span>
+          </div>
+          <div class="alert-item warn">
+            <span class="material-symbols-rounded" style="color: #f59e0b;">construction</span>
+            <span class="alert-text">Sidewalk Blocked</span>
+            <span class="alert-time">0.5 mi</span>
+          </div>
+          <div class="alert-item info">
+            <span class="material-symbols-rounded" style="color: var(--accent);">groups</span>
+            <span class="alert-text">Event Crowd</span>
+            <span class="alert-time">1.2 mi</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weather -->
+      <div class="glass-card bento-card span-6 weather-card">
+        <div>
+          <div class="weather-top">
+            <h3>Current Conditions</h3>
+            <span class="material-symbols-rounded weather-icon">partly_cloudy_day</span>
+          </div>
+          <div class="weather-temp">68&deg;<span style="font-size: 1.5rem; font-weight: 500; color: var(--text-muted);">F</span></div>
+          <div class="weather-desc">Partly Cloudy</div>
+        </div>
+        <div class="weather-meta">
+          <span>Visibility: Good</span>
+          <span>Sunset: 7:42 PM</span>
+        </div>
+      </div>
+
+      <!-- Area Trend -->
+      <div class="glass-card bento-card span-12 trend-card">
+        <h3>Area Safety Trend</h3>
+        <p>Historical comparison for your current zone</p>
+        <div class="chart-container">
+          <div class="bar-wrapper"><div class="bar" style="height: 60%;"></div><span class="bar-label">Mon</span></div>
+          <div class="bar-wrapper"><div class="bar" style="height: 65%;"></div><span class="bar-label">Tue</span></div>
+          <div class="bar-wrapper"><div class="bar" style="height: 55%;"></div><span class="bar-label">Wed</span></div>
+          <div class="bar-wrapper"><div class="bar" style="height: 75%;"></div><span class="bar-label">Thu</span></div>
+          <div class="bar-wrapper"><div class="bar" style="height: 82%;"></div><span class="bar-label">Fri</span></div>
+          <div class="bar-wrapper"><div class="bar" style="height: 88%;"></div><span class="bar-label">Today</span></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</body>
+</html>

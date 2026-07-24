@@ -1,0 +1,37 @@
+# Ignore OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Ignore editor/IDE directories
+.vscode/
+.idea/
+*.suo
+*.user
+*.swp
+*.swo
+
+# Ignore node modules if any
+node_modules/
+
+# Ignore logs
+*.log
+logs/
+
+# Ignore environment files
+.env
+.env.local
+.env.*
+
+# Ignore build output
+dist/
+build/
+out/
+
+# Ignore temp / cache
+.cache/
+.temp/
+tmp/
+
+# Ignore screenshot PNGs (large binary files, not needed in repo)
+**/screen.png
