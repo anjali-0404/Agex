@@ -1,139 +1,188 @@
 'use client';
-
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import AppShell from '@/components/AppShell';
-import { ShieldAlert, MapPin, Video, Share2, PhoneCall, Flashlight, Volume2, XCircle } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import LiveMap from '@/components/LiveMap';
+import useRealtimeLocation from '@/hooks/useRealtimeLocation';
 
-export default function EmergencyPage() {
-  const router = useRouter();
-  const [active, setActive] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
+export default function EmergencySOS() {
+  const { location: userLocation } = useRealtimeLocation();
+  const [seconds, setSeconds] = useState(0);
+  const [activeSOS, setActiveSOS] = useState(true);
+  const [flashlight, setFlashlight] = useState(false);
+  const [alarm, setAlarm] = useState(false);
+  const [fakeCall, setFakeCall] = useState(false);
 
   useEffect(() => {
-    let interval;
-    if (active) {
-      interval = setInterval(() => setElapsed(e => e + 1), 1000);
-    } else {
-      clearInterval(interval);
-      setElapsed(0);
+    let timer;
+    if (activeSOS) {
+      timer = setInterval(() => setSeconds(s => s + 1), 1000);
     }
-    return () => clearInterval(interval);
-  }, [active]);
+    return () => clearInterval(timer);
+  }, [activeSOS]);
 
-  const formatTime = (secs) => {
-    const m = Math.floor(secs / 60).toString().padStart(2, '0');
-    const s = (secs % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
-  };
-
-  const handleActivate = () => {
-    setActive(!active);
+  const formatTimer = (sec) => {
+    const mins = Math.floor(sec / 60);
+    const remainderSec = sec % 60;
+    return `${mins.toString().padStart(2, '0')}:${remainderSec.toString().padStart(2, '0')}`;
   };
 
   return (
     <AppShell>
-      <div className={`min-h-screen transition-colors duration-500 pb-24 ${active ? 'bg-red-950/40' : 'bg-transparent'}`}>
-        {/* Top Bar */}
-        <div className="p-4 flex justify-between items-center z-10 relative">
-          <button onClick={() => router.back()} className="glass p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
-            <XCircle size={24} />
-          </button>
-          <div className="flex items-center gap-2 bg-black/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
-            <div className={`w-2 h-2 rounded-full ${active ? 'bg-red-500 animate-ping' : 'bg-gray-400'}`}></div>
-            <span className="font-bold text-sm text-white tracking-widest uppercase">{active ? 'LIVE SOS' : 'STANDBY'}</span>
-          </div>
-          <div className="w-10"></div> {/* Spacer for centering */}
-        </div>
-
-        {/* Live Map / Central SOS Area */}
-        <div className="relative w-full h-[35vh] flex items-center justify-center overflow-hidden mb-6">
-          {/* Mock Map Background */}
-          <div className="absolute inset-0 opacity-20 pointer-events-none" 
-               style={{ backgroundImage: 'radial-gradient(circle at center, var(--primary) 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
-          </div>
-          
-          {/* Timer Display */}
-          {active && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 text-4xl font-black text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)] animate-pulse">
-              {formatTime(elapsed)}
+      <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
+        
+        {/* Emergency Mode Banner */}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(239,68,68,0.25), rgba(220,38,38,0.15))',
+          border: '1px solid rgba(239,68,68,0.5)', borderRadius: 20, padding: '20px 28px',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16,
+          boxShadow: '0 0 32px rgba(239,68,68,0.3)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <span className="pulse-dot pulse-dot-red" style={{ width: 14, height: 14 }} />
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: 1.5, color: '#ef4444', textTransform: 'uppercase' }}>
+                Emergency Mode Active
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', marginTop: 2 }}>
+                Live GPS Broadcasting • Duration: {formatTimer(seconds)}
+              </div>
             </div>
-          )}
+          </div>
 
-          {/* Massive SOS Button */}
-          <div className="relative flex items-center justify-center">
-            {active && (
-              <>
-                <div className="absolute w-40 h-40 bg-red-500/20 rounded-full animate-ping" style={{ animationDuration: '2s' }}></div>
-                <div className="absolute w-56 h-56 bg-red-500/10 rounded-full animate-ping" style={{ animationDuration: '2s', animationDelay: '0.5s' }}></div>
-                <div className="absolute w-72 h-72 bg-red-500/5 rounded-full animate-ping" style={{ animationDuration: '2s', animationDelay: '1s' }}></div>
-              </>
-            )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span className="badge badge-error">
+              <span className="icon">cell_tower</span> Live Transmitting
+            </span>
+            <button
+              onClick={() => setActiveSOS(!activeSOS)}
+              style={{ background: activeSOS ? 'rgba(255,255,255,0.1)' : '#ef4444', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', padding: '10px 20px', borderRadius: 50, fontWeight: 700, cursor: 'pointer' }}>
+              {activeSOS ? 'Pause Broadcasting' : 'Resume SOS'}
+            </button>
+          </div>
+        </div>
+
+        {/* Main Grid: Left Live GPS Map with SOS Activation Button, Right Contacts & Quick Tools */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 24 }}>
+          
+          {/* Left: Real-time Live GPS Map Canvas with Concentric Ring SOS Overlay */}
+          <div style={{ position: 'relative', width: '100%', height: 480, borderRadius: 24, overflow: 'hidden', border: '2px solid rgba(239,68,68,0.5)' }}>
+            <LiveMap
+              userLocation={userLocation}
+              zoom={16}
+              height="100%"
+            />
+
+            {/* Central Giant SOS Pulsing Button */}
+            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1000, textAlign: 'center' }}>
+              
+              {/* Concentric Pulse Rings */}
+              {activeSOS && (
+                <>
+                  <div style={{ position: 'absolute', inset: -20, borderRadius: '50%', border: '2px solid #ef4444', animation: 'sosRing 2s infinite' }} />
+                  <div style={{ position: 'absolute', inset: -40, borderRadius: '50%', border: '2px solid #ef4444', animation: 'sosRing 2s infinite 0.5s' }} />
+                  <div style={{ position: 'absolute', inset: -60, borderRadius: '50%', border: '2px solid #ef4444', animation: 'sosRing 2s infinite 1s' }} />
+                </>
+              )}
+
+              <button
+                onClick={() => alert('Emergency Alert Broadcast Sent to Contacts & Dispatch!')}
+                style={{
+                  width: 160, height: 160, borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #ef4444, #b91c1c)',
+                  border: '4px solid #fff', color: '#fff',
+                  boxShadow: '0 0 50px rgba(239,68,68,0.8)',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', transition: 'all 0.2s ease', margin: '0 auto'
+                }}>
+                <span className="icon" style={{ fontSize: 44 }}>emergency</span>
+                <span style={{ fontSize: 26, fontWeight: 900, letterSpacing: 1 }}>SOS</span>
+              </button>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginTop: 12, textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
+                {userLocation ? `Lat ${userLocation.lat.toFixed(4)}, Lng ${userLocation.lng.toFixed(4)}` : 'Tracking Live Coordinates...'}
+              </div>
+            </div>
+
+          </div>
+
+          {/* Right: Quick Emergency Tools & Contact Alert List */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             
-            <button 
-              onClick={handleActivate}
-              className={`relative z-10 w-32 h-32 rounded-full flex flex-col items-center justify-center shadow-2xl transition-all duration-300 transform active:scale-95 ${
-                active 
-                ? 'bg-red-600 text-white shadow-[0_0_40px_rgba(239,68,68,0.6)] border-4 border-red-400' 
-                : 'bg-gradient-to-br from-red-500 to-red-700 text-white shadow-[0_10px_25px_rgba(239,68,68,0.5)] border-4 border-white/20'
-              }`}
-            >
-              <ShieldAlert size={40} className="mb-1" />
-              <span className="font-black text-xl tracking-wider">{active ? 'CANCEL' : 'SOS'}</span>
-            </button>
-          </div>
-        </div>
+            {/* Quick Actions Grid */}
+            <div className="glass" style={{ padding: 24 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Emergency Tools</h3>
 
-        {/* Quick Actions Grid */}
-        <div className="px-4 mb-6">
-          <h3 className="font-bold mb-3 text-sm uppercase tracking-wider text-gray-500">Emergency Actions</h3>
-          <div className="grid grid-cols-4 gap-3">
-            <button className="glass rounded-xl p-3 flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition-colors">
-              <Video size={22} className="text-blue-400" />
-              <span className="text-[10px] font-bold text-center leading-tight">Record<br/>Evidence</span>
-            </button>
-            <button className="glass rounded-xl p-3 flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition-colors">
-              <Share2 size={22} className="text-green-400" />
-              <span className="text-[10px] font-bold text-center leading-tight">Share<br/>Location</span>
-            </button>
-            <button className="glass rounded-xl p-3 flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition-colors">
-              <PhoneCall size={22} className="text-purple-400" />
-              <span className="text-[10px] font-bold text-center leading-tight">Fake<br/>Call</span>
-            </button>
-            <button className="glass rounded-xl p-3 flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition-colors">
-              <Volume2 size={22} className="text-yellow-400" />
-              <span className="text-[10px] font-bold text-center leading-tight">Loud<br/>Alarm</span>
-            </button>
-          </div>
-        </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <button
+                  onClick={() => setFakeCall(!fakeCall)}
+                  style={{ background: fakeCall ? 'rgba(34,211,238,0.3)' : 'rgba(255,255,255,0.03)', border: '1px solid rgba(34,211,238,0.3)', padding: 16, borderRadius: 16, color: '#fff', display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center', cursor: 'pointer' }}>
+                  <span className="icon" style={{ fontSize: 24, color: '#22d3ee' }}>phone_in_talk</span>
+                  <span style={{ fontSize: 13, fontWeight: 700 }}>{fakeCall ? 'Active Fake Call' : 'Trigger Fake Call'}</span>
+                </button>
 
-        {/* Emergency Contacts */}
-        <div className="px-4">
-          <h3 className="font-bold mb-3 text-sm uppercase tracking-wider text-gray-500">Emergency Contacts</h3>
-          <div className="space-y-3">
-            {[
-              { name: '911 Emergency', rel: 'Police / Medical', color: 'bg-red-500/20 text-red-500', icon: ShieldAlert },
-              { name: 'Mom', rel: 'Primary Contact', color: 'bg-blue-500/20 text-blue-500', icon: PhoneCall },
-              { name: 'Brother', rel: 'Secondary Contact', color: 'bg-green-500/20 text-green-500', icon: PhoneCall },
-            ].map((contact, i) => (
-              <div key={i} className="glass rounded-xl p-4 flex justify-between items-center group">
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${contact.color}`}>
-                    <contact.icon size={20} />
-                  </div>
-                  <div>
-                    <div className="font-bold">{contact.name}</div>
-                    <div className="text-xs text-gray-500">{contact.rel}</div>
-                  </div>
-                </div>
-                <button className="bg-white/10 hover:bg-white/20 p-3 rounded-full transition-colors">
-                  <PhoneCall size={18} />
+                <button
+                  onClick={() => setAlarm(!alarm)}
+                  style={{ background: alarm ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.03)', border: '1px solid rgba(239,68,68,0.3)', padding: 16, borderRadius: 16, color: '#fff', display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center', cursor: 'pointer' }}>
+                  <span className="icon" style={{ fontSize: 24, color: '#ef4444' }}>volume_up</span>
+                  <span style={{ fontSize: 13, fontWeight: 700 }}>{alarm ? 'Siren Active!' : 'Loud Siren Alarm'}</span>
+                </button>
+
+                <button
+                  onClick={() => setFlashlight(!flashlight)}
+                  style={{ background: flashlight ? 'rgba(245,158,11,0.3)' : 'rgba(255,255,255,0.03)', border: '1px solid rgba(245,158,11,0.3)', padding: 16, borderRadius: 16, color: '#fff', display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center', cursor: 'pointer' }}>
+                  <span className="icon" style={{ fontSize: 24, color: '#f59e0b' }}>highlight</span>
+                  <span style={{ fontSize: 13, fontWeight: 700 }}>{flashlight ? 'Strobe Light ON' : 'Strobe Light'}</span>
+                </button>
+
+                <button
+                  onClick={() => alert('Audio & Video Evidence Recording Started')}
+                  style={{ background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.3)', padding: 16, borderRadius: 16, color: '#fff', display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center', cursor: 'pointer' }}>
+                  <span className="icon" style={{ fontSize: 24, color: '#a855f7' }}>videocam</span>
+                  <span style={{ fontSize: 13, fontWeight: 700 }}>Record Evidence</span>
                 </button>
               </div>
-            ))}
+            </div>
+
+            {/* Emergency Contacts List */}
+            <div className="glass" style={{ padding: 24 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Live Notified Guardians</h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', padding: '12px 16px', borderRadius: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700 }}>Mom (Primary Contact)</div>
+                    <div style={{ fontSize: 11, color: '#10b981', marginTop: 2 }}>● Tracking your live coordinates</div>
+                  </div>
+                  <a href="tel:911" style={{ background: '#10b981', color: '#fff', padding: '8px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span className="icon">call</span> Call
+                  </a>
+                </div>
+
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', padding: '12px 16px', borderRadius: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700 }}>David (Brother)</div>
+                    <div style={{ fontSize: 11, color: '#10b981', marginTop: 2 }}>● SMS Alert Sent</div>
+                  </div>
+                  <a href="tel:911" style={{ background: '#6366f1', color: '#fff', padding: '8px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span className="icon">call</span> Call
+                  </a>
+                </div>
+
+                <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', padding: '12px 16px', borderRadius: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#ef4444' }}>Emergency 911 Dispatch</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Direct Line to Local Emergency Services</div>
+                  </div>
+                  <a href="tel:911" style={{ background: '#ef4444', color: '#fff', padding: '8px 14px', borderRadius: 20, fontSize: 12, fontWeight: 900, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span className="icon">emergency</span> 911
+                  </a>
+                </div>
+              </div>
+            </div>
+
           </div>
+
         </div>
+
       </div>
     </AppShell>
   );

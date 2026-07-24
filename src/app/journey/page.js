@@ -1,158 +1,153 @@
 'use client';
-
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import AppShell from '@/components/AppShell';
-import { 
-  Navigation, ShieldAlert, CheckCircle2, 
-  Clock, MapPin, BellRing, Phone
-} from 'lucide-react';
+import LiveMap from '@/components/LiveMap';
+import useRealtimeLocation from '@/hooks/useRealtimeLocation';
 
-export default function JourneyPage() {
-  const [isActive, setIsActive] = useState(false);
-  const [progress, setProgress] = useState(0);
+export default function SecureJourney() {
+  const { location: userLocation } = useRealtimeLocation();
+  const [journeyActive, setJourneyActive] = useState(true);
+  const [progress, setProgress] = useState(45);
+  const [checkedIn, setCheckedIn] = useState(false);
+  const [destName, setDestName] = useState('Home (Oak Street)');
 
-  // Mock progress simulation
   useEffect(() => {
     let interval;
-    if (isActive) {
+    if (journeyActive && progress < 100) {
       interval = setInterval(() => {
-        setProgress(p => (p >= 100 ? 100 : p + 1));
-      }, 1000);
+        setProgress(p => (p < 99 ? p + 1 : 99));
+      }, 5000);
     }
     return () => clearInterval(interval);
-  }, [isActive]);
+  }, [journeyActive, progress]);
+
+  const handleCheckIn = () => {
+    setCheckedIn(true);
+    setTimeout(() => setCheckedIn(false), 4000);
+  };
 
   return (
     <AppShell>
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+      <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
         
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Secure Your Journey</h1>
-          <p className="text-gray-500">Share your route and get real-time protection.</p>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <h1 style={{ fontSize: 28, fontWeight: 900 }} className="grad-text">Secure Your Journey</h1>
+            <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 4 }}>
+              Real-time GPS tracking with automatic guardian check-ins
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button
+              onClick={handleCheckIn}
+              className="btn-primary" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+              <span className="icon">check_circle</span> {checkedIn ? 'Check-in Recorded!' : 'Check In Safe'}
+            </button>
+            <button
+              onClick={() => setJourneyActive(!journeyActive)}
+              style={{ background: journeyActive ? 'rgba(239,68,68,0.2)' : 'linear-gradient(135deg, #6366f1, #4f46e5)', border: journeyActive ? '1px solid rgba(239,68,68,0.4)' : 'none', color: '#fff', padding: '12px 24px', borderRadius: 50, fontWeight: 700, cursor: 'pointer' }}>
+              {journeyActive ? 'End Journey' : 'Start Journey'}
+            </button>
+          </div>
         </div>
 
-        {!isActive ? (
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <Navigation className="text-blue-600" /> Plan Journey
-            </h2>
-            
-            <div className="space-y-5">
+        {/* Active Journey Tracker Status Card */}
+        <div className="glass animate-in" style={{ padding: 28, display: 'flex', flexDirection: 'column', gap: 20 }}>
+          
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 14, background: 'rgba(34,211,238,0.15)', border: '1px solid rgba(34,211,238,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#22d3ee' }}>
+                <span className="icon" style={{ fontSize: 24 }}>directions_walk</span>
+              </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Destination</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                  <input type="text" placeholder="e.g. Central Station" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700 }}>Destination</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: '#f1f5f9' }}>{destName}</div>
               </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Time</label>
-                  <div className="relative">
-                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                    <select className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none">
-                      <option>15 mins</option>
-                      <option>30 mins</option>
-                      <option>1 hour</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Mode of Transit</label>
-                  <select className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none">
-                    <option>Walking</option>
-                    <option>Public Transit</option>
-                    <option>Rideshare / Taxi</option>
-                  </select>
-                </div>
-              </div>
+            </div>
 
+            <div style={{ display: 'flex', gap: 20 }}>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Selected Guardians</label>
-                <div className="flex gap-2">
-                  <div className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1 border border-blue-100">
-                    <CheckCircle2 size={14} /> Mom
-                  </div>
-                  <div className="bg-gray-50 text-gray-600 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1 border border-gray-200 border-dashed hover:bg-gray-100 cursor-pointer">
-                    + Add Guardian
-                  </div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>ESTIMATED ETA</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: '#6366f1' }}>14 mins left</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>LIVE STATUS</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: '#10b981', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span className="pulse-dot pulse-dot-green" /> On Track
                 </div>
               </div>
-
-              <button 
-                onClick={() => setIsActive(true)}
-                className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-md transition-all active:scale-[0.98]"
-              >
-                Start Protected Journey
-              </button>
             </div>
           </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Active Monitor */}
-            <div className="bg-white rounded-2xl shadow-xl border-2 border-blue-500 p-6 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-blue-100">
-                <div className="h-full bg-blue-500 transition-all duration-1000" style={{ width: `${progress}%` }}></div>
-              </div>
-              
-              <div className="flex justify-between items-center mb-6 mt-2">
-                <div>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-xs font-bold uppercase tracking-wider mb-2">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                    </span>
-                    Live Tracking Active
-                  </span>
-                  <h2 className="text-xl font-bold text-gray-900">En route to Central Station</h2>
-                </div>
-                <div className="text-right">
-                  <p className="text-3xl font-black text-blue-600">12:45</p>
-                  <p className="text-xs text-gray-500 font-medium">MINUTES REMAINING</p>
-                </div>
-              </div>
 
-              <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between mb-6 border border-gray-100">
-                <div className="flex items-center gap-3">
-                  <div className="bg-orange-100 p-2 rounded-lg text-orange-600">
-                    <BellRing size={20} />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-gray-900">Next Check-in</p>
-                    <p className="text-xs text-gray-500">in 5 minutes</p>
-                  </div>
-                </div>
-                <button className="px-4 py-2 bg-white border border-gray-200 shadow-sm rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50 transition">
-                  Extend Time
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <button 
-                  onClick={() => setIsActive(false)}
-                  className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-md transition-colors"
-                >
-                  <CheckCircle2 size={20} /> I'm Safe
-                </button>
-                <button className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl shadow-md transition-colors animate-pulse">
-                  <ShieldAlert size={20} /> SOS Alarm
-                </button>
-              </div>
+          {/* Real-time Progress Bar */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 8, color: 'var(--text-secondary)' }}>
+              <span>Departure: State St</span>
+              <span>Progress: {progress}%</span>
+              <span>Arrival: {destName}</span>
             </div>
-            
-            {/* Guardians Viewing */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex -space-x-2">
-                  <img className="w-8 h-8 rounded-full border-2 border-white" src="https://i.pravatar.cc/150?u=mom" alt="Mom" />
-                </div>
-                <p className="text-sm font-medium text-gray-700">Mom is watching your journey</p>
-              </div>
-              <button className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition"><Phone size={18} /></button>
+            <div style={{ width: '100%', height: 12, background: 'rgba(255,255,255,0.06)', borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{
+                width: `${progress}%`, height: '100%',
+                background: 'linear-gradient(90deg, #6366f1, #22d3ee)',
+                boxShadow: '0 0 16px rgba(34,211,238,0.6)',
+                transition: 'width 1s ease'
+              }} />
             </div>
           </div>
-        )}
+        </div>
+
+        {/* Live GPS Map & Guardians Panel Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 24 }}>
+          
+          {/* Real-time Live GPS Map Preview */}
+          <div style={{ position: 'relative', width: '100%', height: 420, borderRadius: 24, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <LiveMap
+              userLocation={userLocation}
+              zoom={15}
+              height="100%"
+            />
+
+            <div className="glass" style={{ position: 'absolute', bottom: 16, left: 16, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, zIndex: 1000, fontSize: 13 }}>
+              <span className="pulse-dot pulse-dot-cyan" />
+              <span>Real-time GPS Location Active</span>
+            </div>
+          </div>
+
+          {/* Notified Guardians & Check-in Schedule */}
+          <div className="glass animate-in delay-2" style={{ padding: 28, display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 700 }}>Tracking Guardians</h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', padding: 16, borderRadius: 14, display: 'flex', alignItems: 'center', gap: 14 }}>
+                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyK9Eqghk56sthuiLJOq_ZTO5qY9vUagPEaXyNBpHg_J4HjXR-CDbPj-4NWXhbJCWO2AnXqwqfbvdK_4zKEugfOSVF_IHDQTBb4UgUp2hNVDjc0yFkxZ_FRoR8nQ3l6xqrkvtg9BMoOLg-v4SKOLJ65V0l52RUBxSDiNXM3dklXsEc6HpdkgmKkyaFU3aDo2ODH0gV3B4AGe0pwmbzy3Lr9TCrLwwfJqXeuwR0FU-5uFTZA8TZxweS3rnah_2hF5TH83DHYTB8cGkG" alt="Mom" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover' }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700 }}>Mom (Primary Guardian)</div>
+                  <div style={{ fontSize: 12, color: '#10b981', marginTop: 2 }}>● Active live location feed</div>
+                </div>
+              </div>
+
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', padding: 16, borderRadius: 14, display: 'flex', alignItems: 'center', gap: 14 }}>
+                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKyBcnQJQz0RjLPZX3KxpHcrGdidATpg0i7e2K4h9UaxngfwxzDyoreMA8z1_jpe4XAqzh9xzyxnDPakz1Lk2Mh0A39CKc9FLt9V7lkj4lpTH9tV_nGIlmsSq5AltrXlwN7fjde8qd-l9R1u81mZg3quHU1lfmKXY5bTJAVPCs8pL5xyUSeymKLnAg6yP0RWxFZD8eKETzEmG5WhNpTXFM6Vw8BiCGpb-wENLrB7uHw4Wd-4NxZrJdEWK1jsdVUdlVpOvF6ue7hrux" alt="David" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover' }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700 }}>David (Brother)</div>
+                  <div style={{ fontSize: 12, color: '#10b981', marginTop: 2 }}>● Active live location feed</div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 'auto', paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>AUTOMATIC SAFETY CHECK</div>
+              <div style={{ fontSize: 13, color: 'var(--text-primary)', background: 'rgba(99,102,241,0.1)', padding: 12, borderRadius: 10, border: '1px solid rgba(99,102,241,0.2)' }}>
+                ⏰ Next automated safety check in <strong>5 minutes</strong>. If unacknowledged, alert SMS is dispatched.
+              </div>
+            </div>
+          </div>
+
+        </div>
+
       </div>
     </AppShell>
   );
