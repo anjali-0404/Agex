@@ -1,28 +1,14 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { NAV_ITEMS, OTHER_NAV_ITEMS, DEFAULT_USER } from '@/lib/constants';
 import styles from './Sidebar.module.css';
-
-const navItems = [
-  { href: '/',          icon: 'dashboard',          label: 'Dashboard' },
-  { href: '/map',       icon: 'explore',            label: 'Safety Map' },
-  { href: '/routes',    icon: 'route',              label: 'Route Planner' },
-  { href: '/report',    icon: 'report',             label: 'Report Incident' },
-  { href: '/community', icon: 'groups',             label: 'Community' },
-  { href: '/analytics', icon: 'analytics',          label: 'Analytics' },
-];
-
-const bottomItems = [
-  { href: '/assistant', icon: 'smart_toy',          label: 'Safety Assistant' },
-  { href: '/profile',   icon: 'person',             label: 'Profile' },
-  { href: '/settings',  icon: 'settings',           label: 'Settings' },
-];
 
 export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <nav className={styles.sidebar}>
+    <nav className={styles.sidebar} aria-label="Main Navigation">
       {/* Logo */}
       <div className={styles.logo}>
         <div className={styles.logoBadge}>
@@ -36,7 +22,7 @@ export default function Sidebar() {
 
       {/* Main nav */}
       <div className={styles.nav}>
-        {navItems.map((item) => {
+        {NAV_ITEMS.map((item) => {
           const active = pathname === item.href;
           return (
             <Link key={item.href} href={item.href}
@@ -49,7 +35,7 @@ export default function Sidebar() {
       </div>
 
       {/* Emergency SOS */}
-      <Link href="/emergency" className={styles.sosBtn}>
+      <Link href="/emergency" className={styles.sosBtn} aria-label="Emergency SOS">
         <span className="icon" style={{ fontSize: 20 }}>emergency</span>
         Emergency SOS
       </Link>
@@ -58,7 +44,7 @@ export default function Sidebar() {
 
       {/* Bottom items */}
       <div className={styles.bottomNav}>
-        {bottomItems.map((item) => {
+        {OTHER_NAV_ITEMS.map((item) => {
           const active = pathname === item.href;
           return (
             <Link key={item.href} href={item.href}
@@ -73,13 +59,13 @@ export default function Sidebar() {
       {/* User avatar */}
       <div className={styles.userArea}>
         <img
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuBsTCDzWbsWn99APYomqRDkbS5k7UncVZ_w03EAuZRonCUwvscGvzAhT0gIUajYiNYib4IYOGGdstdGezp0E1_BC1J3vB9UagdRkFbw1BJxIIv8XV1LvUV0o9THrKzkjPS57dRT5hish5X_QgWA74J_OaSSQuBdH8w-TPKdsemLiU576c9A7yae9DFG56iiEfVljHu8c6svDS86psLGXi307-_x9_fRjq8UbtcDk4IzQEEQ2NEceF5DuYzAGO4-nGOyoGRmiI3BkPgo"
-          alt="Sarah" className={styles.avatar} />
+          src={DEFAULT_USER.avatar}
+          alt={DEFAULT_USER.name} className={styles.avatar} />
         <div>
-          <div className={styles.userName}>Sarah Johnson</div>
+          <div className={styles.userName}>{DEFAULT_USER.name}</div>
           <div className={styles.userStatus}>
             <span className="pulse-dot pulse-dot-green" style={{ width: 6, height: 6 }} />
-            <span style={{ fontSize: 11 }}>Protected</span>
+            <span style={{ fontSize: 11 }}>{DEFAULT_USER.status}</span>
           </div>
         </div>
       </div>

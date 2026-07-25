@@ -1,8 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
-import AppShell from '@/components/AppShell';
 import Link from 'next/link';
 import useRealtimeLocation from '@/hooks/useRealtimeLocation';
+import { DEFAULT_USER } from '@/lib/constants';
 
 export default function Dashboard() {
   const { location: userLocation, loading: geoLoading } = useRealtimeLocation();
@@ -30,20 +30,19 @@ export default function Dashboard() {
   ];
 
   return (
-    <AppShell>
-      <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
-        
-        {/* Welcome Header */}
-        <div className="glass animate-in" style={{ padding: '24px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <img
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBsTCDzWbsWn99APYomqRDkbS5k7UncVZ_w03EAuZRonCUwvscGvzAhT0gIUajYiNYib4IYOGGdstdGezp0E1_BC1J3vB9UagdRkFbw1BJxIIv8XV1LvUV0o9THrKzkjPS57dRT5hish5X_QgWA74J_OaSSQuBdH8w-TPKdsemLiU576c9A7yae9DFG56iiEfVljHu8c6svDS86psLGXi307-_x9_fRjq8UbtcDk4IzQEEQ2NEceF5DuYzAGO4-nGOyoGRmiI3BkPgo"
-              alt="Sarah" style={{ width: 52, height: 52, borderRadius: '50%', border: '2px solid #6366f1', objectFit: 'cover' }} />
-            <div>
-              <h1 style={{ fontSize: 24, fontWeight: 900 }} className="grad-text">Welcome back, Sarah</h1>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-                <span className="pulse-dot pulse-dot-cyan" />
-                <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      
+      {/* Welcome Header */}
+      <div className="glass animate-in" style={{ padding: '24px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <img
+            src={DEFAULT_USER.avatar}
+            alt={DEFAULT_USER.name} style={{ width: 52, height: 52, borderRadius: '50%', border: '2px solid #6366f1', objectFit: 'cover' }} />
+          <div>
+            <h1 style={{ fontSize: 24, fontWeight: 900 }} className="grad-text">Welcome back, Sarah</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+              <span className="pulse-dot pulse-dot-cyan" />
+              <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
                   Aegis Live GPS: {userLocation ? `${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)}` : 'Acquiring Real-time Position...'}
                 </span>
               </div>
@@ -246,6 +245,5 @@ export default function Dashboard() {
         </div>
 
       </div>
-    </AppShell>
   );
 }

@@ -1,7 +1,5 @@
 import './globals.css';
-import Sidebar from '@/components/Sidebar';
-import BottomNav from '@/components/BottomNav';
-import MobileHeader from '@/components/MobileHeader';
+import AppShell from '@/components/AppShell';
 
 export const metadata = {
   title: { default: 'AegisAI — Safety Navigator', template: '%s | AegisAI' },
@@ -26,7 +24,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body>
-        {children}
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

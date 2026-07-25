@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import AppShell from '@/components/AppShell';
 
 export default function SettingsPage() {
   const [notifications, setNotifications] = useState(true);
@@ -16,8 +15,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <AppShell>
-      <div style={{ maxWidth: 800, margin: '0 auto' }}>
+    <div style={{ maxWidth: 800, margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
           <div>
             <h1 style={{ fontSize: 28, fontWeight: 900 }} className="grad-text">App Settings</h1>
@@ -139,6 +137,5 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
-    </AppShell>
   );
 }

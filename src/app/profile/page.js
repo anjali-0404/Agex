@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import AppShell from '@/components/AppShell';
 import { 
   User, Shield, Settings, Bell, 
   MapPin, Phone, AlertTriangle, 
@@ -31,7 +30,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <AppShell>
+    <>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
         
         {/* Profile Header */}
@@ -185,6 +184,6 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
-    </AppShell>
+    </>
   );
 }

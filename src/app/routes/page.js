@@ -1,6 +1,5 @@
 'use client';
 import { useState, useEffect } from 'react';
-import AppShell from '@/components/AppShell';
 import LiveMap from '@/components/LiveMap';
 import useRealtimeLocation from '@/hooks/useRealtimeLocation';
 
@@ -117,8 +116,7 @@ export default function RoutePlanner() {
   ];
 
   return (
-    <AppShell>
-      <div style={{ maxWidth: 1280, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 24 }}>
+    <div style={{ maxWidth: 1280, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 24 }}>
         
         {/* Left Panel: Inputs & Suggested Routes */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -276,6 +274,5 @@ export default function RoutePlanner() {
         </div>
 
       </div>
-    </AppShell>
   );
 }

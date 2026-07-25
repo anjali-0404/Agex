@@ -1,6 +1,5 @@
 'use client';
 import { useState, useEffect } from 'react';
-import AppShell from '@/components/AppShell';
 import LiveMap from '@/components/LiveMap';
 import useRealtimeLocation from '@/hooks/useRealtimeLocation';
 
@@ -27,8 +26,7 @@ export default function EmergencySOS() {
   };
 
   return (
-    <AppShell>
-      <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
         
         {/* Emergency Mode Banner */}
         <div style={{
@@ -86,6 +84,7 @@ export default function EmergencySOS() {
 
               <button
                 onClick={() => alert('Emergency Alert Broadcast Sent to Contacts & Dispatch!')}
+                aria-label="Activate Emergency SOS Alert"
                 style={{
                   width: 160, height: 160, borderRadius: '50%',
                   background: 'linear-gradient(135deg, #ef4444, #b91c1c)',
@@ -184,6 +183,5 @@ export default function EmergencySOS() {
         </div>
 
       </div>
-    </AppShell>
   );
 }

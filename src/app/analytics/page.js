@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import AppShell from '@/components/AppShell';
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('7d');
@@ -29,8 +28,7 @@ export default function AnalyticsPage() {
   };
 
   return (
-    <AppShell>
-      <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
         
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
@@ -133,6 +131,5 @@ export default function AnalyticsPage() {
         </div>
 
       </div>
-    </AppShell>
   );
 }

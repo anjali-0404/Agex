@@ -1,6 +1,5 @@
 'use client';
 import { useState, useEffect } from 'react';
-import AppShell from '@/components/AppShell';
 import LiveMap from '@/components/LiveMap';
 import useRealtimeLocation from '@/hooks/useRealtimeLocation';
 
@@ -27,8 +26,7 @@ export default function SecureJourney() {
   };
 
   return (
-    <AppShell>
-      <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
         
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
@@ -149,6 +147,5 @@ export default function SecureJourney() {
         </div>
 
       </div>
-    </AppShell>
   );
 }

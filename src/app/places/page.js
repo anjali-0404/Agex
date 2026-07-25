@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import AppShell from '@/components/AppShell';
 import { 
   Search, MapPin, Navigation, Phone, 
   ShieldCheck, Coffee, Building2, Flame, 
@@ -36,8 +35,7 @@ export default function SafePlacesPage() {
   });
 
   return (
-    <AppShell>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Verified Safe Places</h1>
@@ -119,6 +117,5 @@ export default function SafePlacesPage() {
           ))}
         </div>
       </div>
-    </AppShell>
   );
 }

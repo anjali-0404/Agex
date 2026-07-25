@@ -1,8 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
-import AppShell from '@/components/AppShell';
 import LiveMap from '@/components/LiveMap';
 import useRealtimeLocation from '@/hooks/useRealtimeLocation';
+import { DEFAULT_LOCATION } from '@/lib/constants';
 
 export default function SafetyMap() {
   const { location: userLocation, loading, error: geoError } = useRealtimeLocation();
@@ -21,8 +21,8 @@ export default function SafetyMap() {
   }, [userLocation, mapCenter]);
 
   // Generate dynamic real-time markers around the user's live position
-  const baseLat = userLocation ? userLocation.lat : 41.8781;
-  const baseLng = userLocation ? userLocation.lng : -87.6298;
+  const baseLat = userLocation ? userLocation.lat : DEFAULT_LOCATION.lat;
+  const baseLng = userLocation ? userLocation.lng : DEFAULT_LOCATION.lng;
 
   const realMarkers = [
     {
@@ -96,8 +96,7 @@ export default function SafetyMap() {
   const filters = ['All', 'Safe Routes', 'Incidents', 'Police Stations', 'Safe Havens'];
 
   return (
-    <AppShell>
-      <div style={{ position: 'relative', width: '100%', height: 'calc(100vh - 80px)', overflow: 'hidden', borderRadius: 24, border: '1px solid rgba(255,255,255,0.1)' }}>
+    <div style={{ position: 'relative', width: '100%', height: 'calc(100vh - 80px)', overflow: 'hidden', borderRadius: 24, border: '1px solid rgba(255,255,255,0.1)' }}>
         
         {/* Real-time Interactive Leaflet Map */}
         <LiveMap
@@ -187,6 +186,5 @@ export default function SafetyMap() {
         </div>
 
       </div>
-    </AppShell>
   );
 }

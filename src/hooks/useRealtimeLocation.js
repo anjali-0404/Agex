@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { DEFAULT_LOCATION } from '@/lib/constants';
 
 export default function useRealtimeLocation() {
   const [location, setLocation] = useState(null); // { lat, lng, accuracy, timestamp }
@@ -10,8 +11,8 @@ export default function useRealtimeLocation() {
     if (!navigator.geolocation) {
       setError('Geolocation is not supported by your browser');
       setLoading(false);
-      // Fallback default (Chicago center)
-      setLocation({ lat: 41.8781, lng: -87.6298, accuracy: 100 });
+      // Fallback default
+      setLocation(DEFAULT_LOCATION);
       return;
     }
 
@@ -33,7 +34,7 @@ export default function useRealtimeLocation() {
         setError(err.message);
         setLoading(false);
         // Fallback default
-        setLocation({ lat: 41.8781, lng: -87.6298, accuracy: 100 });
+        setLocation(DEFAULT_LOCATION);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
