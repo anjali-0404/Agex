@@ -1,14 +1,16 @@
 'use client';
 import React, { useState } from 'react';
 import AppShell from '@/components/AppShell';
+import useRealtimeLocation from '@/hooks/useRealtimeLocation';
 
 export default function ReportIncidentPage() {
-  const [category, setCategory] = useState('');
-  const [location, setLocation] = useState('');
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
+  const { location: userLocation } = useRealtimeLocation();
+  const [category, setCategory] = useState('Poor Lighting');
+  const [locationStr, setLocationStr] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [time, setTime] = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
   const [description, setDescription] = useState('');
-  const [anonymous, setAnonymous] = useState(false);
+  const [anonymous, setAnonymous] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -17,328 +19,167 @@ export default function ReportIncidentPage() {
     'Unsafe Area', 'Assault', 'Property Crime'
   ];
 
+  const handleUseGPS = () => {
+    if (userLocation) {
+      setLocationStr(`GPS: ${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)} (Current Position)`);
+    } else {
+      setLocationStr('GPS: 41.8781, -87.6298 (Default Position)');
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!description.trim()) return;
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSuccess(true);
-    }, 1500);
+    }, 1200);
+  };
+
+  const resetForm = () => {
+    setIsSuccess(false);
+    setDescription('');
+    setLocationStr('');
   };
 
   return (
     <AppShell>
-      <div className="report-container">
-        <div className="glass-card">
+      <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
+        
+        <div className="glass animate-in" style={{ padding: 32, borderRadius: 24 }}>
           {!isSuccess ? (
             <>
-              <h1 className="title">Report an Incident</h1>
-              <p className="subtitle">Help keep our community safe by reporting incidents or hazards.</p>
-              
-              <form onSubmit={handleSubmit} className="report-form">
-                <div className="form-group">
-                  <label>Incident Category</label>
-                  <div className="chip-container">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444' }}>
+                  <span className="icon" style={{ fontSize: 24 }}>report</span>
+                </div>
+                <div>
+                  <h1 style={{ fontSize: 24, fontWeight: 900 }} className="grad-text">Report an Incident</h1>
+                  <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Help protect your community by logging hazards or incidents</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmit} style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
+                
+                {/* Category selector */}
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: 10 }}>Incident Category</label>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {categories.map((c) => (
                       <button
                         key={c}
                         type="button"
-                        className={`chip ${category === c ? 'selected' : ''}`}
                         onClick={() => setCategory(c)}
-                      >
+                        style={{
+                          padding: '8px 16px', borderRadius: 20, fontSize: 13, fontWeight: 600,
+                          background: category === c ? 'linear-gradient(135deg, #6366f1, #a855f7)' : 'rgba(255,255,255,0.03)',
+                          border: category === c ? '1px solid #a855f7' : '1px solid rgba(255,255,255,0.1)',
+                          color: '#fff', cursor: 'pointer', transition: 'all 0.2s ease'
+                        }}>
                         {c}
                       </button>
                     ))}
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label>Location</label>
-                  <div className="location-input-wrapper">
-                    <input 
-                      type="text" 
-                      placeholder="Enter address or use current location" 
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
+                {/* Location with Auto GPS button */}
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: 8 }}>Incident Location</label>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <input
+                      type="text"
+                      placeholder="Enter address or street intersection..."
+                      value={locationStr}
+                      onChange={(e) => setLocationStr(e.target.value)}
+                      className="input-glass"
+                      style={{ flex: 1 }}
                       required
                     />
-                    <button type="button" className="btn-location" onClick={() => setLocation('Current Location (Auto-filled)')}>
-                      📍 Auto-fill
+                    <button
+                      type="button"
+                      onClick={handleUseGPS}
+                      style={{ background: 'rgba(34,211,238,0.15)', border: '1px solid rgba(34,211,238,0.3)', color: '#22d3ee', padding: '0 16px', borderRadius: 16, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whitespace: 'nowrap' }}>
+                      <span className="icon">my_location</span> Use GPS
                     </button>
                   </div>
                 </div>
 
-                <div className="form-row">
-                  <div className="form-group half">
-                    <label>Date</label>
-                    <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+                {/* Date & Time Row */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: 8 }}>Date</label>
+                    <input
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="input-glass"
+                      required
+                    />
                   </div>
-                  <div className="form-group half">
-                    <label>Time</label>
-                    <input type="time" value={time} onChange={(e) => setTime(e.target.value)} required />
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: 8 }}>Time</label>
+                    <input
+                      type="time"
+                      value={time}
+                      onChange={(e) => setTime(e.target.value)}
+                      className="input-glass"
+                      required
+                    />
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label>Description ({description.length}/500)</label>
-                  <textarea 
-                    rows="4" 
-                    maxLength="500"
-                    placeholder="Provide details about what happened..."
+                {/* Description */}
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginBottom: 8 }}>Description</label>
+                  <textarea
+                    rows={4}
+                    placeholder="Provide details about what you observed..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
+                    className="input-glass"
+                    style={{ resize: 'vertical' }}
                     required
-                  ></textarea>
+                  />
                 </div>
 
-                <div className="form-group">
-                  <label>Media / Photos (Optional)</label>
-                  <div className="upload-area">
-                    <p>Drag & Drop images here or <span>browse</span></p>
+                {/* Anonymous Toggle */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16 }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600 }}>Submit Anonymously</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Your name will not be attached to community feeds</div>
                   </div>
+                  <input
+                    type="checkbox"
+                    checked={anonymous}
+                    onChange={(e) => setAnonymous(e.target.checked)}
+                    style={{ width: 20, height: 20, accentColor: '#6366f1', cursor: 'pointer' }}
+                  />
                 </div>
 
-                <div className="form-group toggle-group">
-                  <label className="toggle-label">
-                    <span>Submit Anonymously</span>
-                    <input 
-                      type="checkbox" 
-                      checked={anonymous} 
-                      onChange={(e) => setAnonymous(e.target.checked)} 
-                    />
-                    <span className="toggle-slider"></span>
-                  </label>
-                </div>
-
-                <button type="submit" className="submit-btn" disabled={isSubmitting}>
-                  {isSubmitting ? 'Submitting...' : 'Submit Report'}
+                <button type="submit" className="btn-primary" style={{ justifyContent: 'center', marginTop: 8 }} disabled={isSubmitting}>
+                  <span className="icon">send</span>
+                  {isSubmitting ? 'Submitting to Live Telemetry...' : 'Submit Incident Report'}
                 </button>
+
               </form>
             </>
           ) : (
-            <div className="success-state">
-              <div className="success-icon">✓</div>
-              <h2>Report Submitted!</h2>
-              <p>Thank you for contributing to community safety.</p>
-              <button className="submit-btn" onClick={() => setIsSuccess(false)}>Submit Another Report</button>
+            <div style={{ textTransform: 'none', textAlign: 'center', padding: '32px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+              <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(16,185,129,0.2)', border: '2px solid #10b981', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span className="icon" style={{ fontSize: 36 }}>check_circle</span>
+              </div>
+              <h2 style={{ fontSize: 24, fontWeight: 900 }} className="grad-text">Report Verified & Broadcasted!</h2>
+              <p style={{ fontSize: 14, color: 'var(--text-secondary)', maxWidth: 480 }}>
+                Thank you. Your report for <strong>{category}</strong> has been logged to live telemetry and notified to nearby community members.
+              </p>
+              <button onClick={resetForm} className="btn-primary" style={{ marginTop: 12 }}>
+                Submit Another Report
+              </button>
             </div>
           )}
         </div>
 
-        <style dangerouslySetInnerHTML={{__html: `
-          .report-container {
-            display: flex;
-            justify-content: center;
-            padding: 2rem;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-            color: #f8fafc;
-            font-family: 'Inter', sans-serif;
-          }
-          .glass-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            padding: 2.5rem;
-            width: 100%;
-            max-width: 640px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.5s ease-out;
-          }
-          .title {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(to right, #38bdf8, #818cf8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-          }
-          .subtitle {
-            color: #94a3b8;
-            margin-bottom: 2rem;
-          }
-          .form-group {
-            margin-bottom: 1.5rem;
-            display: flex;
-            flex-direction: column;
-          }
-          .form-row {
-            display: flex;
-            gap: 1rem;
-          }
-          .half { flex: 1; }
-          label {
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: #cbd5e1;
-            margin-bottom: 0.5rem;
-          }
-          input, textarea {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 0.875rem 1rem;
-            color: #fff;
-            outline: none;
-            transition: all 0.2s ease;
-          }
-          input:focus, textarea:focus {
-            border-color: #38bdf8;
-            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
-          }
-          .chip-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-          }
-          .chip {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 0.5rem 1rem;
-            color: #cbd5e1;
-            cursor: pointer;
-            transition: all 0.2s ease;
-          }
-          .chip:hover {
-            background: rgba(255, 255, 255, 0.1);
-          }
-          .chip.selected {
-            background: rgba(56, 189, 248, 0.2);
-            border-color: #38bdf8;
-            color: #38bdf8;
-          }
-          .location-input-wrapper {
-            display: flex;
-            gap: 0.5rem;
-          }
-          .location-input-wrapper input {
-            flex: 1;
-          }
-          .btn-location {
-            background: rgba(56, 189, 248, 0.1);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            color: #38bdf8;
-            border-radius: 12px;
-            padding: 0 1rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-          }
-          .btn-location:hover {
-            background: rgba(56, 189, 248, 0.2);
-          }
-          .upload-area {
-            border: 2px dashed rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            padding: 2rem;
-            text-align: center;
-            color: #94a3b8;
-            background: rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-            transition: all 0.2s ease;
-          }
-          .upload-area:hover {
-            border-color: #38bdf8;
-            background: rgba(56, 189, 248, 0.05);
-          }
-          .upload-area span {
-            color: #38bdf8;
-            text-decoration: underline;
-          }
-          .toggle-group {
-            flex-direction: row;
-            align-items: center;
-          }
-          .toggle-label {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            cursor: pointer;
-          }
-          .toggle-label input {
-            display: none;
-          }
-          .toggle-slider {
-            width: 48px;
-            height: 24px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            position: relative;
-            transition: all 0.3s ease;
-          }
-          .toggle-slider::after {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 20px;
-            height: 20px;
-            background: #fff;
-            border-radius: 50%;
-            transition: all 0.3s ease;
-          }
-          .toggle-label input:checked + .toggle-slider {
-            background: #38bdf8;
-          }
-          .toggle-label input:checked + .toggle-slider::after {
-            transform: translateX(24px);
-          }
-          .submit-btn {
-            width: 100%;
-            background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%);
-            color: #fff;
-            border: none;
-            border-radius: 12px;
-            padding: 1rem;
-            font-size: 1.125rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 1rem;
-          }
-          .submit-btn:hover:not(:disabled) {
-            box-shadow: 0 10px 20px -10px rgba(56, 189, 248, 0.5);
-            transform: translateY(-2px);
-          }
-          .submit-btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-          }
-          .success-state {
-            text-align: center;
-            padding: 3rem 1rem;
-            animation: fadeIn 0.5s ease-out;
-          }
-          .success-icon {
-            width: 80px;
-            height: 80px;
-            background: rgba(52, 211, 153, 0.2);
-            color: #34d399;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            margin: 0 auto 1.5rem;
-            border: 2px solid #34d399;
-            box-shadow: 0 0 30px rgba(52, 211, 153, 0.3);
-          }
-          .success-state h2 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            color: #f8fafc;
-          }
-          .success-state p {
-            color: #94a3b8;
-            margin-bottom: 2rem;
-          }
-          @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-        `}} />
       </div>
     </AppShell>
   );

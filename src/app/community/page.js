@@ -5,17 +5,23 @@ import AppShell from '@/components/AppShell';
 export default function CommunityFeedPage() {
   const [activeTab, setActiveTab] = useState('Nearby');
   const [activeFilter, setActiveFilter] = useState('All');
+  const [showPostModal, setShowPostModal] = useState(false);
+  const [newPostText, setNewPostText] = useState('');
+  const [newPostCategory, setNewPostCategory] = useState('Suspicious Activity');
   
   const [posts, setPosts] = useState([
     {
       id: 1,
-      author: 'Anonymous User',
+      author: 'Anonymous Guardian',
       time: '10 mins ago',
-      location: 'Central Park North',
+      location: 'Central Corridor (0.2 mi)',
       category: 'Suspicious Activity',
-      description: 'Noticed a group of individuals looking into parked cars near the north entrance.',
+      description: 'Streetlight flicker reported near north entrance. Aegis automated lighting check requested.',
       upvotes: 42,
-      comments: 5,
+      comments: [
+        { id: 101, user: 'Sarah J.', text: 'Thanks for posting! Will take Main St instead.' }
+      ],
+      showComments: false,
       severity: 'Low',
       isUpvoted: false
     },
@@ -23,23 +29,27 @@ export default function CommunityFeedPage() {
       id: 2,
       author: 'Verified Resident',
       time: '2 hours ago',
-      location: '5th Ave & 34th St',
+      location: '5th Ave & 34th St (0.5 mi)',
       category: 'Unsafe Area',
-      description: 'Street lights are completely out for two blocks. Extremely dark and unsafe to walk right now.',
+      description: 'Street lights out for two blocks due to utility maintenance. Extremely dark; recommend taking well-lit sidewalk route.',
       upvotes: 128,
-      comments: 14,
+      comments: [
+        { id: 102, user: 'David K.', text: 'Utility crew arrived 15 mins ago.' }
+      ],
+      showComments: false,
       severity: 'Medium',
       isUpvoted: true
     },
     {
       id: 3,
-      author: 'Community Watch',
+      author: 'Community Watch Hub',
       time: '5 hours ago',
       location: 'Downtown Transit Center',
       category: 'Assault',
-      description: 'Police responding to an altercation near the main terminal. Avoid the area if possible.',
+      description: 'Officers responding to an active hazard near terminal B. Avoid east staircase.',
       upvotes: 356,
-      comments: 42,
+      comments: [],
+      showComments: false,
       severity: 'High',
       isUpvoted: false
     }
@@ -61,348 +71,215 @@ export default function CommunityFeedPage() {
     }));
   };
 
-  const getSeverityColor = (sev) => {
-    switch(sev) {
-      case 'High': return '#ef4444'; // red
-      case 'Medium': return '#f59e0b'; // amber
-      case 'Low': return '#3b82f6'; // blue
-      default: return '#94a3b8';
-    }
+  const toggleComments = (id) => {
+    setPosts(posts.map(p => p.id === id ? { ...p, showComments: !p.showComments } : p));
   };
+
+  const handleCreatePost = () => {
+    if (!newPostText.trim()) return;
+    const newEntry = {
+      id: Date.now(),
+      author: 'Sarah Johnson (You)',
+      time: 'Just now',
+      location: 'Current GPS Radius',
+      category: newPostCategory,
+      description: newPostText,
+      upvotes: 1,
+      comments: [],
+      showComments: false,
+      severity: 'Medium',
+      isUpvoted: true
+    };
+    setPosts([newEntry, ...posts]);
+    setNewPostText('');
+    setShowPostModal(false);
+  };
+
+  const filteredPosts = posts.filter(p => {
+    if (activeFilter !== 'All' && p.category !== activeFilter) return false;
+    return true;
+  });
 
   return (
     <AppShell>
-      <div className="feed-container">
-        <div className="content-wrapper">
-          
-          <div className="stats-banner">
-            <div className="stat-item">
-              <span className="stat-value">2,847</span>
-              <span className="stat-label">reports this month</span>
-            </div>
-            <div className="stat-divider"></div>
-            <div className="stat-item">
-              <span className="stat-value text-green">156</span>
-              <span className="stat-label">resolved</span>
-            </div>
-            <div className="stat-divider"></div>
-            <div className="stat-item">
-              <span className="stat-value text-cyan">94%</span>
-              <span className="stat-label">feel safer</span>
-            </div>
+      <div style={{ maxWidth: 880, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+        
+        {/* Header & Quick Action */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <h1 style={{ fontSize: 28, fontWeight: 900 }} className="grad-text">Community Safety Feed</h1>
+            <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 4 }}>
+              Real-time crowd-sourced safety intelligence & neighborhood reports
+            </p>
           </div>
 
-          <div className="nav-container">
-            <div className="tabs">
-              {tabs.map(tab => (
-                <button 
-                  key={tab} 
-                  className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
-                  onClick={() => setActiveTab(tab)}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
+          <button onClick={() => setShowPostModal(true)} className="btn-primary">
+            <span className="icon">add</span> Post Safety Report
+          </button>
+        </div>
 
-            <div className="filters">
-              {filters.map(filter => (
-                <button 
-                  key={filter} 
-                  className={`filter-chip ${activeFilter === filter ? 'active' : ''}`}
-                  onClick={() => setActiveFilter(filter)}
-                >
-                  {filter}
-                </button>
-              ))}
+        {/* Stats Banner */}
+        <div className="glass animate-in" style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+            <div>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>THIS MONTH</span>
+              <strong style={{ fontSize: 18, color: '#6366f1' }}>2,847 Reports</strong>
+            </div>
+            <div>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>RESOLVED</span>
+              <strong style={{ fontSize: 18, color: '#10b981' }}>156 Hazards Fixed</strong>
+            </div>
+            <div>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>COMMUNITY TRUST</span>
+              <strong style={{ fontSize: 18, color: '#22d3ee' }}>94% Feel Safer</strong>
             </div>
           </div>
+          <span className="badge badge-safe"><span className="pulse-dot pulse-dot-green" /> Live Feed Active</span>
+        </div>
 
-          <div className="posts-list">
-            {posts.map(post => (
-              <div key={post.id} className="post-card">
-                <div className="post-header">
-                  <div className="author-info">
-                    <div className="author-avatar"></div>
-                    <div>
-                      <h4 className="author-name">{post.author}</h4>
-                      <p className="post-time">{post.time} • <span className="location-tag">📍 {post.location}</span></p>
-                    </div>
-                  </div>
-                  <div 
-                    className="severity-badge" 
-                    style={{ borderColor: getSeverityColor(post.severity), color: getSeverityColor(post.severity), backgroundColor: `${getSeverityColor(post.severity)}20` }}
-                  >
-                    {post.severity}
-                  </div>
-                </div>
-                
-                <div className="post-content">
-                  <span className="category-tag">{post.category}</span>
-                  <p>{post.description}</p>
-                </div>
-
-                <div className="post-actions">
-                  <button 
-                    className={`action-btn ${post.isUpvoted ? 'upvoted' : ''}`}
-                    onClick={() => handleUpvote(post.id)}
-                  >
-                    ▲ {post.upvotes}
-                  </button>
-                  <button className="action-btn">💬 {post.comments} Comments</button>
-                  <button className="action-btn share-btn">↪ Share</button>
-                </div>
-              </div>
+        {/* Tabs & Category Filter Chips */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', gap: 12, borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 8 }}>
+            {tabs.map(t => (
+              <button
+                key={t}
+                onClick={() => setActiveTab(t)}
+                style={{
+                  background: 'none', border: 'none', color: activeTab === t ? '#6366f1' : 'var(--text-muted)',
+                  fontSize: 14, fontWeight: 700, padding: '6px 12px', borderBottom: activeTab === t ? '2px solid #6366f1' : '2px solid transparent',
+                  cursor: 'pointer'
+                }}>
+                {t}
+              </button>
             ))}
           </div>
 
-          <button className="fab-button" title="Quick Post">
-            +
-          </button>
-
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+            {filters.map(f => (
+              <button
+                key={f}
+                onClick={() => setActiveFilter(f)}
+                style={{
+                  padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, whitespace: 'nowrap',
+                  background: activeFilter === f ? 'linear-gradient(135deg, #6366f1, #a855f7)' : 'rgba(255,255,255,0.03)',
+                  border: activeFilter === f ? '1px solid #a855f7' : '1px solid rgba(255,255,255,0.1)',
+                  color: '#fff', cursor: 'pointer'
+                }}>
+                {f}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <style dangerouslySetInnerHTML={{__html: `
-          .feed-container {
-            min-height: 100vh;
-            background: #0f172a;
-            color: #f8fafc;
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            justify-content: center;
-            padding: 2rem 1rem;
-          }
-          .content-wrapper {
-            width: 100%;
-            max-width: 768px;
-            position: relative;
-          }
-          .stats-banner {
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.8) 100%);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            padding: 1.5rem;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            margin-bottom: 2rem;
-            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
-            animation: slideDown 0.5s ease-out;
-          }
-          .stat-item {
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-          }
-          .stat-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-          }
-          .text-green { color: #34d399; }
-          .text-cyan { color: #22d3ee; }
-          .stat-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #94a3b8;
-          }
-          .stat-divider {
-            width: 1px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.1);
-          }
-          .nav-container {
-            margin-bottom: 2rem;
-          }
-          .tabs {
-            display: flex;
-            gap: 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 1.5rem;
-          }
-          .tab-btn {
-            background: none;
-            border: none;
-            color: #64748b;
-            padding: 0.75rem 0;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            position: relative;
-            transition: color 0.2s;
-          }
-          .tab-btn:hover {
-            color: #cbd5e1;
-          }
-          .tab-btn.active {
-            color: #fff;
-          }
-          .tab-btn.active::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: #38bdf8;
-            box-shadow: 0 0 10px #38bdf8;
-          }
-          .filters {
-            display: flex;
-            gap: 0.5rem;
-            overflow-x: auto;
-            padding-bottom: 0.5rem;
-            scrollbar-width: none;
-          }
-          .filters::-webkit-scrollbar { display: none; }
-          .filter-chip {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #cbd5e1;
-            padding: 0.4rem 1rem;
-            border-radius: 20px;
-            font-size: 0.875rem;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s;
-          }
-          .filter-chip:hover {
-            background: rgba(255, 255, 255, 0.1);
-          }
-          .filter-chip.active {
-            background: rgba(56, 189, 248, 0.15);
-            border-color: #38bdf8;
-            color: #38bdf8;
-          }
-          .posts-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-          }
-          .post-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            padding: 1.5rem;
-            transition: transform 0.2s, box-shadow 0.2s;
-          }
-          .post-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 30px -10px rgba(0,0,0,0.5);
-            border-color: rgba(255, 255, 255, 0.1);
-          }
-          .post-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1rem;
-          }
-          .author-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-          }
-          .author-avatar {
-            width: 44px;
-            height: 44px;
-            background: linear-gradient(135deg, #475569 0%, #1e293b 100%);
-            border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.1);
-          }
-          .author-name {
-            margin: 0 0 0.25rem 0;
-            font-weight: 600;
-          }
-          .post-time {
-            margin: 0;
-            font-size: 0.75rem;
-            color: #64748b;
-          }
-          .location-tag {
-            color: #38bdf8;
-          }
-          .severity-badge {
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 0.25rem 0.75rem;
-            border-radius: 12px;
-            border: 1px solid;
-          }
-          .post-content {
-            margin-bottom: 1.5rem;
-          }
-          .category-tag {
-            display: inline-block;
-            font-size: 0.75rem;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 0.2rem 0.6rem;
-            border-radius: 4px;
-            margin-bottom: 0.75rem;
-            color: #cbd5e1;
-          }
-          .post-content p {
-            margin: 0;
-            line-height: 1.6;
-            color: #e2e8f0;
-          }
-          .post-actions {
-            display: flex;
-            gap: 1rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            padding-top: 1rem;
-          }
-          .action-btn {
-            background: transparent;
-            border: none;
-            color: #94a3b8;
-            font-size: 0.875rem;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-            transition: color 0.2s;
-            padding: 0.5rem 0;
-          }
-          .action-btn:hover {
-            color: #fff;
-          }
-          .action-btn.upvoted {
-            color: #38bdf8;
-          }
-          .share-btn {
-            margin-left: auto;
-          }
-          .fab-button {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%);
-            border: none;
-            border-radius: 50%;
-            color: white;
-            font-size: 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 10px 25px rgba(56, 189, 248, 0.5);
-            transition: transform 0.2s, box-shadow 0.2s;
-            z-index: 100;
-          }
-          .fab-button:hover {
-            transform: scale(1.1) rotate(90deg);
-            box-shadow: 0 15px 35px rgba(56, 189, 248, 0.7);
-          }
-          @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-        `}} />
+        {/* Feed Posts */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {filteredPosts.map(post => (
+            <div key={post.id} className="glass animate-in" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'linear-gradient(135deg, #6366f1, #a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14 }}>
+                    {post.author.charAt(0)}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{post.author}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{post.time} • 📍 {post.location}</div>
+                  </div>
+                </div>
+
+                <span className={`badge ${post.severity === 'High' ? 'badge-error' : post.severity === 'Medium' ? 'badge-warning' : 'badge-safe'}`}>
+                  {post.severity} Severity
+                </span>
+              </div>
+
+              <div style={{ fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.6 }}>
+                <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 8, background: 'rgba(99,102,241,0.15)', color: '#6366f1', fontSize: 11, fontWeight: 700, marginRight: 8 }}>
+                  {post.category}
+                </span>
+                {post.description}
+              </div>
+
+              <div style={{ display: 'flex', gap: 16, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)', fontSize: 13 }}>
+                <button
+                  onClick={() => handleUpvote(post.id)}
+                  style={{ background: post.isUpvoted ? 'rgba(99,102,241,0.2)' : 'none', border: post.isUpvoted ? '1px solid #6366f1' : 'none', color: post.isUpvoted ? '#6366f1' : 'var(--text-muted)', padding: '6px 12px', borderRadius: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+                  ▲ {post.upvotes} Upvotes
+                </button>
+                <button
+                  onClick={() => toggleComments(post.id)}
+                  style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  💬 {post.comments.length} Comments
+                </button>
+              </div>
+
+              {/* Expandable Comments Drawer */}
+              {post.showComments && (
+                <div style={{ background: 'rgba(0,0,0,0.3)', padding: 16, borderRadius: 14, marginTop: 8, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {post.comments.length > 0 ? (
+                    post.comments.map(c => (
+                      <div key={c.id} style={{ fontSize: 13, borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: 6 }}>
+                        <strong style={{ color: '#22d3ee' }}>{c.user}: </strong>
+                        <span style={{ color: 'var(--text-secondary)' }}>{c.text}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>No comments yet. Be the first to reply!</div>
+                  )}
+                </div>
+              )}
+
+            </div>
+          ))}
+        </div>
+
+        {/* Quick Post Modal */}
+        {showPostModal && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: 16 }}>
+            <div className="glass animate-in" style={{ width: '100%', maxWidth: 520, padding: 28, borderRadius: 24 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <h3 style={{ fontSize: 20, fontWeight: 800 }}>Post Safety Incident</h3>
+                <button onClick={() => setShowPostModal(false)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+                  <span className="icon">close</span>
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>Category</label>
+                  <select
+                    value={newPostCategory}
+                    onChange={(e) => setNewPostCategory(e.target.value)}
+                    className="input-glass">
+                    {filters.filter(f => f !== 'All').map(f => (
+                      <option key={f} value={f} style={{ background: '#080c18' }}>{f}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>Details</label>
+                  <textarea
+                    rows={4}
+                    placeholder="Describe what you observed..."
+                    value={newPostText}
+                    onChange={(e) => setNewPostText(e.target.value)}
+                    className="input-glass"
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 8 }}>
+                  <button onClick={() => setShowPostModal(false)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '10px 20px', borderRadius: 20, fontWeight: 600, cursor: 'pointer' }}>
+                    Cancel
+                  </button>
+                  <button onClick={handleCreatePost} className="btn-primary">
+                    Publish Report
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </AppShell>
   );
