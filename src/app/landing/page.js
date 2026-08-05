@@ -1,7 +1,6 @@
 'use client';
 import LandingPage from '@/components/LandingPage';
 
-export default function RootPage() {
+export default function PublicLandingPage() {
   return <LandingPage />;
 }
-

@@ -1,12 +1,10 @@
 import './globals.css';
-import Sidebar from '@/components/Sidebar';
-import BottomNav from '@/components/BottomNav';
-import MobileHeader from '@/components/MobileHeader';
+import Providers from '@/components/Providers';
 
 export const metadata = {
-  title: { default: 'AegisAI — Safety Navigator', template: '%s | AegisAI' },
-  description: 'Empathetic AI-powered personal safety platform. Real-time alerts, safe routing, emergency SOS and community safety features.',
-  keywords: ['safety', 'AI', 'navigation', 'emergency', 'community'],
+  title: { default: 'AegisAI India — Realtime Safety Navigator', template: '%s | AegisAI India' },
+  description: 'Empathetic AI-powered personal safety platform tailored for India. Real-time alerts, E2EE live GPS sharing, rapid SOS emergency dispatches and community safety features.',
+  keywords: ['safety', 'India', 'AI', 'navigation', 'emergency', 'SOS', 'E2EE', 'community'],
   icons: { icon: '/favicon.ico' },
 };
 
@@ -17,7 +15,7 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
           rel="stylesheet"
         />
         <link
@@ -26,7 +24,9 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body>
-        {children}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

@@ -1,6 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 
+// Default Fallback Coordinates: India (New Delhi Connaught Place / Central India)
+const INDIA_DEFAULT_CENTER = { lat: 28.6139, lng: 77.2090, accuracy: 100 };
+
 export default function useRealtimeLocation() {
   const [location, setLocation] = useState(null); // { lat, lng, accuracy, timestamp }
   const [error, setError] = useState(null);
@@ -10,8 +13,8 @@ export default function useRealtimeLocation() {
     if (!navigator.geolocation) {
       setError('Geolocation is not supported by your browser');
       setLoading(false);
-      // Fallback default (Chicago center)
-      setLocation({ lat: 41.8781, lng: -87.6298, accuracy: 100 });
+      // Fallback default (India Center)
+      setLocation(INDIA_DEFAULT_CENTER);
       return;
     }
 
@@ -29,11 +32,11 @@ export default function useRealtimeLocation() {
         setLoading(false);
       },
       (err) => {
-        console.warn('Geolocation initial error:', err.message);
+        console.warn('Geolocation initial fallback to India:', err.message);
         setError(err.message);
         setLoading(false);
-        // Fallback default
-        setLocation({ lat: 41.8781, lng: -87.6298, accuracy: 100 });
+        // Fallback default (India Center)
+        setLocation(INDIA_DEFAULT_CENTER);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
@@ -52,7 +55,7 @@ export default function useRealtimeLocation() {
         setError(null);
       },
       (err) => {
-        console.warn('Geolocation watch error:', err.message);
+        console.warn('Geolocation watch note:', err.message);
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
     );

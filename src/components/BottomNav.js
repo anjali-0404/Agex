@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import styles from './BottomNav.module.css';
 
 const items = [
-  { href: '/',          icon: 'dashboard',  label: 'Home' },
+  { href: '/dashboard', icon: 'dashboard',  label: 'Dashboard' },
   { href: '/map',       icon: 'explore',    label: 'Map' },
   { href: '/emergency', icon: 'emergency',  label: 'SOS',   sos: true },
   { href: '/assistant', icon: 'smart_toy',  label: 'Aegis' },

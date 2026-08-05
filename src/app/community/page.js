@@ -1,64 +1,60 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AppShell from '@/components/AppShell';
+import { useAuth } from '@/context/AuthContext';
+
+const CITIES = [
+  { id: 'all', label: 'All Cities' },
+  { id: 'New Delhi', label: 'New Delhi' },
+  { id: 'Gurugram', label: 'Gurugram' },
+  { id: 'Mumbai', label: 'Mumbai' },
+  { id: 'Bengaluru', label: 'Bengaluru' },
+  { id: 'Hyderabad', label: 'Hyderabad' },
+  { id: 'Pune', label: 'Pune' },
+];
 
 export default function CommunityFeedPage() {
-  const [activeTab, setActiveTab] = useState('Nearby');
+  const { user } = useAuth();
+  const [selectedCity, setSelectedCity] = useState('all');
   const [activeFilter, setActiveFilter] = useState('All');
   const [showPostModal, setShowPostModal] = useState(false);
   const [newPostText, setNewPostText] = useState('');
   const [newPostCategory, setNewPostCategory] = useState('Suspicious Activity');
   
-  const [posts, setPosts] = useState([
-    {
-      id: 1,
-      author: 'Anonymous Guardian',
-      time: '10 mins ago',
-      location: 'Central Corridor (0.2 mi)',
-      category: 'Suspicious Activity',
-      description: 'Streetlight flicker reported near north entrance. Aegis automated lighting check requested.',
-      upvotes: 42,
-      comments: [
-        { id: 101, user: 'Sarah J.', text: 'Thanks for posting! Will take Main St instead.' }
-      ],
-      showComments: false,
-      severity: 'Low',
-      isUpvoted: false
-    },
-    {
-      id: 2,
-      author: 'Verified Resident',
-      time: '2 hours ago',
-      location: '5th Ave & 34th St (0.5 mi)',
-      category: 'Unsafe Area',
-      description: 'Street lights out for two blocks due to utility maintenance. Extremely dark; recommend taking well-lit sidewalk route.',
-      upvotes: 128,
-      comments: [
-        { id: 102, user: 'David K.', text: 'Utility crew arrived 15 mins ago.' }
-      ],
-      showComments: false,
-      severity: 'Medium',
-      isUpvoted: true
-    },
-    {
-      id: 3,
-      author: 'Community Watch Hub',
-      time: '5 hours ago',
-      location: 'Downtown Transit Center',
-      category: 'Assault',
-      description: 'Officers responding to an active hazard near terminal B. Avoid east staircase.',
-      upvotes: 356,
-      comments: [],
-      showComments: false,
-      severity: 'High',
-      isUpvoted: false
+  const [posts, setPosts] = useState([]);
+
+  useEffect(() => {
+    try {
+      const storedCity = localStorage.getItem('aegis_selected_city');
+      if (storedCity) {
+        setSelectedCity(storedCity);
+      } else if (user?.city) {
+        if (user.city.toLowerCase().includes('delhi')) setSelectedCity('New Delhi');
+        else if (user.city.toLowerCase().includes('mumbai')) setSelectedCity('Mumbai');
+        else if (user.city.toLowerCase().includes('bengaluru') || user.city.toLowerCase().includes('bangalore')) setSelectedCity('Bengaluru');
+      }
+    } catch (_) {}
+  }, [user]);
+
+  useEffect(() => {
+    async function fetchCommunityPosts() {
+      try {
+        const url = selectedCity === 'all' ? '/api/community' : `/api/community?city=${encodeURIComponent(selectedCity)}`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.posts) setPosts(data.posts);
+        }
+      } catch (err) {
+        console.warn('Community API note:', err);
+      }
     }
-  ]);
+    fetchCommunityPosts();
+  }, [selectedCity]);
 
-  const tabs = ['All', 'Nearby', 'Following', 'Verified'];
-  const filters = ['All', 'Suspicious Activity', 'Unsafe Area', 'Assault', 'Property Crime', 'Harassment'];
+  const filters = ['All', 'Suspicious Activity', 'Unsafe Area', 'Verified Patrol', 'Harassment'];
 
-  const handleUpvote = (id) => {
+  const handleUpvote = async (id) => {
     setPosts(posts.map(p => {
       if (p.id === id) {
         return { 
@@ -69,28 +65,55 @@ export default function CommunityFeedPage() {
       }
       return p;
     }));
+
+    try {
+      await fetch('/api/community', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'upvote', postId: id })
+      });
+    } catch (_) {}
   };
 
   const toggleComments = (id) => {
     setPosts(posts.map(p => p.id === id ? { ...p, showComments: !p.showComments } : p));
   };
 
-  const handleCreatePost = () => {
+  const handleCreatePost = async () => {
     if (!newPostText.trim()) return;
-    const newEntry = {
-      id: Date.now(),
-      author: 'Sarah Johnson (You)',
-      time: 'Just now',
-      location: 'Current GPS Radius',
-      category: newPostCategory,
-      description: newPostText,
-      upvotes: 1,
-      comments: [],
-      showComments: false,
-      severity: 'Medium',
-      isUpvoted: true
-    };
-    setPosts([newEntry, ...posts]);
+    const authorName = `${user?.name || 'Ananya Sharma'} (You)`;
+    
+    try {
+      const res = await fetch('/api/community', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create',
+          postText: newPostText,
+          category: newPostCategory,
+          author: authorName
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.posts) setPosts(data.posts);
+      }
+    } catch (_) {
+      const newEntry = {
+        id: Date.now(),
+        author: authorName,
+        time: 'Just now',
+        location: 'Connaught Place, New Delhi',
+        category: newPostCategory,
+        description: newPostText,
+        upvotes: 1,
+        comments: [],
+        showComments: false,
+        severity: 'Medium',
+        isUpvoted: true
+      };
+      setPosts([newEntry, ...posts]);
+    }
     setNewPostText('');
     setShowPostModal(false);
   };
@@ -102,178 +125,140 @@ export default function CommunityFeedPage() {
 
   return (
     <AppShell>
-      <div style={{ maxWidth: 880, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
         
-        {/* Header & Quick Action */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+        {/* Header */}
+        <div className="glass animate-in" style={{ padding: '24px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div>
-            <h1 style={{ fontSize: 28, fontWeight: 900 }} className="grad-text">Community Safety Feed</h1>
-            <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 4 }}>
-              Real-time crowd-sourced safety intelligence & neighborhood reports
+            <h1 style={{ fontSize: 24, fontWeight: 900 }} className="grad-text">India Community Safety Feed</h1>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>
+              Real-time crowdsourced safety warnings & police patrol updates across Delhi NCR, Mumbai & Bengaluru
             </p>
           </div>
-
-          <button onClick={() => setShowPostModal(true)} className="btn-primary">
-            <span className="icon">add</span> Post Safety Report
+          <button onClick={() => setShowPostModal(true)} className="btn-cyan">
+            <span className="icon">add_comment</span> Post Community Update
           </button>
         </div>
 
-        {/* Stats Banner */}
-        <div className="glass animate-in" style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-            <div>
-              <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>THIS MONTH</span>
-              <strong style={{ fontSize: 18, color: '#6366f1' }}>2,847 Reports</strong>
-            </div>
-            <div>
-              <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>RESOLVED</span>
-              <strong style={{ fontSize: 18, color: '#10b981' }}>156 Hazards Fixed</strong>
-            </div>
-            <div>
-              <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block' }}>COMMUNITY TRUST</span>
-              <strong style={{ fontSize: 18, color: '#22d3ee' }}>94% Feel Safer</strong>
-            </div>
+        {/* City Filter Selector */}
+        <div className="glass" style={{ padding: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span className="icon" style={{ fontSize: 16, color: '#38bdf8' }}>location_on</span>
+            Select City / Active Route Feed:
           </div>
-          <span className="badge badge-safe"><span className="pulse-dot pulse-dot-green" /> Live Feed Active</span>
-        </div>
-
-        {/* Tabs & Category Filter Chips */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'flex', gap: 12, borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 8 }}>
-            {tabs.map(t => (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {CITIES.map(c => (
               <button
-                key={t}
-                onClick={() => setActiveTab(t)}
+                key={c.id}
+                onClick={() => {
+                  setSelectedCity(c.id);
+                  try { localStorage.setItem('aegis_selected_city', c.id); } catch (_) {}
+                }}
                 style={{
-                  background: 'none', border: 'none', color: activeTab === t ? '#6366f1' : 'var(--text-muted)',
-                  fontSize: 14, fontWeight: 700, padding: '6px 12px', borderBottom: activeTab === t ? '2px solid #6366f1' : '2px solid transparent',
-                  cursor: 'pointer'
+                  padding: '6px 14px',
+                  borderRadius: 12,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  background: selectedCity === c.id ? 'linear-gradient(135deg, #3b82f6, #6366f1)' : 'rgba(255,255,255,0.04)',
+                  border: selectedCity === c.id ? '1px solid #60a5fa' : '1px solid rgba(255,255,255,0.1)',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
                 }}>
-                {t}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
-            {filters.map(f => (
-              <button
-                key={f}
-                onClick={() => setActiveFilter(f)}
-                style={{
-                  padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, whitespace: 'nowrap',
-                  background: activeFilter === f ? 'linear-gradient(135deg, #6366f1, #a855f7)' : 'rgba(255,255,255,0.03)',
-                  border: activeFilter === f ? '1px solid #a855f7' : '1px solid rgba(255,255,255,0.1)',
-                  color: '#fff', cursor: 'pointer'
-                }}>
-                {f}
+                {c.label}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Feed Posts */}
+        {/* Category Filters */}
+        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
+          {filters.map(f => (
+            <button
+              key={f}
+              onClick={() => setActiveFilter(f)}
+              style={{
+                padding: '8px 18px',
+                borderRadius: 20,
+                fontSize: 13,
+                fontWeight: 700,
+                background: activeFilter === f ? '#6366f1' : 'rgba(255,255,255,0.04)',
+                border: activeFilter === f ? '1px solid #818cf8' : '1px solid rgba(255,255,255,0.1)',
+                color: '#fff',
+                cursor: 'pointer'
+              }}>
+              {f}
+            </button>
+          ))}
+        </div>
+
+        {/* Post Feed */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {filteredPosts.map(post => (
-            <div key={post.id} className="glass animate-in" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 14 }}>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div key={post.id} className="glass animate-in" style={{ padding: 24 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'linear-gradient(135deg, #6366f1, #a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14 }}>
-                    {post.author.charAt(0)}
+                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg, #6366f1, #22d3ee)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800 }}>
+                    {post.author[0]}
                   </div>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{post.author}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{post.time} • 📍 {post.location}</div>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: '#f8fafc' }}>{post.author}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>📍 {post.location} • {post.time}</div>
                   </div>
                 </div>
-
-                <span className={`badge ${post.severity === 'High' ? 'badge-error' : post.severity === 'Medium' ? 'badge-warning' : 'badge-safe'}`}>
-                  {post.severity} Severity
-                </span>
+                <span className="badge badge-cyan">{post.category}</span>
               </div>
 
-              <div style={{ fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.6 }}>
-                <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 8, background: 'rgba(99,102,241,0.15)', color: '#6366f1', fontSize: 11, fontWeight: 700, marginRight: 8 }}>
-                  {post.category}
-                </span>
+              <p style={{ fontSize: 14, color: '#e2e8f0', lineHeight: 1.6, marginBottom: 16 }}>
                 {post.description}
-              </div>
+              </p>
 
-              <div style={{ display: 'flex', gap: 16, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)', fontSize: 13 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 20, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 14 }}>
                 <button
                   onClick={() => handleUpvote(post.id)}
-                  style={{ background: post.isUpvoted ? 'rgba(99,102,241,0.2)' : 'none', border: post.isUpvoted ? '1px solid #6366f1' : 'none', color: post.isUpvoted ? '#6366f1' : 'var(--text-muted)', padding: '6px 12px', borderRadius: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
-                  ▲ {post.upvotes} Upvotes
+                  style={{ background: 'none', border: 'none', color: post.isUpvoted ? '#22d3ee' : 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, cursor: 'pointer' }}>
+                  <span className="icon">thumb_up</span> {post.upvotes} Upvotes
                 </button>
+
                 <button
                   onClick={() => toggleComments(post.id)}
-                  style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  💬 {post.comments.length} Comments
+                  style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, cursor: 'pointer' }}>
+                  <span className="icon">comment</span> {post.comments.length} Comments
                 </button>
               </div>
 
-              {/* Expandable Comments Drawer */}
               {post.showComments && (
-                <div style={{ background: 'rgba(0,0,0,0.3)', padding: 16, borderRadius: 14, marginTop: 8, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {post.comments.length > 0 ? (
-                    post.comments.map(c => (
-                      <div key={c.id} style={{ fontSize: 13, borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: 6 }}>
-                        <strong style={{ color: '#22d3ee' }}>{c.user}: </strong>
-                        <span style={{ color: 'var(--text-secondary)' }}>{c.text}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>No comments yet. Be the first to reply!</div>
-                  )}
+                <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px dashed rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {post.comments.map(c => (
+                    <div key={c.id} style={{ background: 'rgba(255,255,255,0.03)', padding: '8px 12px', borderRadius: 10, fontSize: 13 }}>
+                      <strong style={{ color: '#22d3ee' }}>{c.user}: </strong>
+                      <span style={{ color: '#cbd5e1' }}>{c.text}</span>
+                    </div>
+                  ))}
                 </div>
               )}
-
             </div>
           ))}
         </div>
 
-        {/* Quick Post Modal */}
+        {/* Create Post Modal */}
         {showPostModal && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: 16 }}>
-            <div className="glass animate-in" style={{ width: '100%', maxWidth: 520, padding: 28, borderRadius: 24 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <h3 style={{ fontSize: 20, fontWeight: 800 }}>Post Safety Incident</h3>
-                <button onClick={() => setShowPostModal(false)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
-                  <span className="icon">close</span>
-                </button>
-              </div>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(8,12,24,0.85)', backdropFilter: 'blur(16px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+            <div className="glass" style={{ width: '100%', maxWidth: 500, padding: 28 }}>
+              <h3 style={{ fontSize: 20, fontWeight: 900, marginBottom: 16 }}>Post India Community Safety Alert</h3>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <textarea
+                  rows={4}
+                  placeholder="Share safety update, streetlight outages, or PCR sightings in your locality..."
+                  value={newPostText}
+                  onChange={(e) => setNewPostText(e.target.value)}
+                  style={{ width: '100%' }}
+                />
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>Category</label>
-                  <select
-                    value={newPostCategory}
-                    onChange={(e) => setNewPostCategory(e.target.value)}
-                    className="input-glass">
-                    {filters.filter(f => f !== 'All').map(f => (
-                      <option key={f} value={f} style={{ background: '#080c18' }}>{f}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>Details</label>
-                  <textarea
-                    rows={4}
-                    placeholder="Describe what you observed..."
-                    value={newPostText}
-                    onChange={(e) => setNewPostText(e.target.value)}
-                    className="input-glass"
-                  />
-                </div>
-
-                <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 8 }}>
-                  <button onClick={() => setShowPostModal(false)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '10px 20px', borderRadius: 20, fontWeight: 600, cursor: 'pointer' }}>
-                    Cancel
-                  </button>
-                  <button onClick={handleCreatePost} className="btn-primary">
-                    Publish Report
-                  </button>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <button onClick={() => setShowPostModal(false)} style={{ flex: 1, padding: 12, background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 12, color: '#fff', fontWeight: 700 }}>Cancel</button>
+                  <button onClick={handleCreatePost} className="btn-cyan" style={{ flex: 1, justifyContent: 'center' }}>Post Alert</button>
                 </div>
               </div>
             </div>

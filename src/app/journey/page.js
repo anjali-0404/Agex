@@ -9,7 +9,7 @@ export default function SecureJourney() {
   const [journeyActive, setJourneyActive] = useState(true);
   const [progress, setProgress] = useState(45);
   const [checkedIn, setCheckedIn] = useState(false);
-  const [destName, setDestName] = useState('Home (Oak Street)');
+  const [destName, setDestName] = useState('Home (Oak Street, Connaught Place)');
 
   useEffect(() => {
     let interval;
@@ -21,9 +21,28 @@ export default function SecureJourney() {
     return () => clearInterval(interval);
   }, [journeyActive, progress]);
 
-  const handleCheckIn = () => {
+  const handleCheckIn = async () => {
     setCheckedIn(true);
+    try {
+      await fetch('/api/journey', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'checkin' })
+      });
+    } catch (_) {}
     setTimeout(() => setCheckedIn(false), 4000);
+  };
+
+  const handleToggleJourney = async () => {
+    const nextState = !journeyActive;
+    setJourneyActive(nextState);
+    try {
+      await fetch('/api/journey', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggle', destination: destName })
+      });
+    } catch (_) {}
   };
 
   return (
@@ -46,7 +65,7 @@ export default function SecureJourney() {
               <span className="icon">check_circle</span> {checkedIn ? 'Check-in Recorded!' : 'Check In Safe'}
             </button>
             <button
-              onClick={() => setJourneyActive(!journeyActive)}
+              onClick={handleToggleJourney}
               style={{ background: journeyActive ? 'rgba(239,68,68,0.2)' : 'linear-gradient(135deg, #6366f1, #4f46e5)', border: journeyActive ? '1px solid rgba(239,68,68,0.4)' : 'none', color: '#fff', padding: '12px 24px', borderRadius: 50, fontWeight: 700, cursor: 'pointer' }}>
               {journeyActive ? 'End Journey' : 'Start Journey'}
             </button>

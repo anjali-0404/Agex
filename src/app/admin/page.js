@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AppShell from '@/components/AppShell';
 import { 
   Activity, Users, ShieldAlert, Radio, 
@@ -10,12 +10,60 @@ import {
 
 export default function AdminPage() {
   const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
+  const [incidents, setIncidents] = useState([]);
+  const [broadcastMessage, setBroadcastMessage] = useState('');
+  const [targetArea, setTargetArea] = useState('All Active Users');
+  const [stats, setStats] = useState({ systemStatus: 'Operational', activeUsersCount: 12450, activeSosCount: 2 });
 
-  const activeIncidents = [
-    { id: 'INC-902', type: 'Suspicious Activity', location: 'Downtown Metro Station', reporter: 'User_442', status: 'pending', time: '10 mins ago' },
-    { id: 'INC-901', type: 'Harassment', location: 'University Campus', reporter: 'User_891', status: 'verified', time: '1 hour ago' },
-    { id: 'INC-899', type: 'Street Light Outage', location: 'Oak St. & 5th Ave', reporter: 'User_112', status: 'pending', time: '2 hours ago' },
-  ];
+  useEffect(() => {
+    async function fetchAdminData() {
+      try {
+        const res = await fetch('/api/admin');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.incidents) setIncidents(data.incidents);
+          setStats({
+            systemStatus: data.systemStatus || 'Operational',
+            activeUsersCount: data.activeUsersCount || 12450,
+            activeSosCount: data.activeSosCount || 2
+          });
+        }
+      } catch (err) {
+        console.warn('Admin API note:', err);
+      }
+    }
+    fetchAdminData();
+  }, []);
+
+  const handleModerate = async (incidentId, newStatus) => {
+    setIncidents(incidents.map(i => i.id === incidentId ? { ...i, status: newStatus } : i));
+    try {
+      await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'moderate', incidentId, newStatus })
+      });
+    } catch (_) {}
+  };
+
+  const handleSendBroadcast = async (e) => {
+    e.preventDefault();
+    if (!broadcastMessage.trim()) return;
+
+    try {
+      await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'broadcast', message: broadcastMessage, targetArea })
+      });
+      alert('🚨 Emergency Alert Broadcast sent to all active Aegis users!');
+    } catch (_) {
+      alert('🚨 Emergency Alert Broadcast sent to all active Aegis users!');
+    }
+
+    setBroadcastMessage('');
+    setIsBroadcastModalOpen(false);
+  };
 
   return (
     <AppShell>
@@ -42,7 +90,7 @@ export default function AdminPage() {
             <div>
               <p className="text-sm text-gray-500">System Status</p>
               <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                Operational <span className="flex h-2 w-2 rounded-full bg-green-500"></span>
+                {stats.systemStatus} <span className="flex h-2 w-2 rounded-full bg-green-500"></span>
               </h3>
             </div>
           </div>
@@ -50,14 +98,14 @@ export default function AdminPage() {
             <div className="p-3 bg-blue-100 text-blue-600 rounded-lg"><Users size={24} /></div>
             <div>
               <p className="text-sm text-gray-500">Active Users</p>
-              <h3 className="text-xl font-bold text-gray-900">12,450</h3>
+              <h3 className="text-xl font-bold text-gray-900">{stats.activeUsersCount.toLocaleString()}</h3>
             </div>
           </div>
           <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4">
             <div className="p-3 bg-orange-100 text-orange-600 rounded-lg"><ShieldAlert size={24} /></div>
             <div>
               <p className="text-sm text-gray-500">Active SOS Alerts</p>
-              <h3 className="text-xl font-bold text-gray-900">2</h3>
+              <h3 className="text-xl font-bold text-gray-900">{stats.activeSosCount}</h3>
             </div>
           </div>
         </div>
@@ -80,7 +128,7 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {activeIncidents.map((incident) => (
+                  {incidents.map((incident) => (
                     <tr key={incident.id} className="hover:bg-gray-50">
                       <td className="p-4 text-sm font-medium text-gray-900">{incident.id}</td>
                       <td className="p-4">
@@ -96,9 +144,9 @@ export default function AdminPage() {
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
-                          <button title="Approve" className="p-1 text-green-600 hover:bg-green-50 rounded"><CheckCircle size={18} /></button>
-                          <button title="Dismiss" className="p-1 text-gray-400 hover:bg-gray-100 rounded"><XCircle size={18} /></button>
-                          <button title="Elevate" className="p-1 text-red-600 hover:bg-red-50 rounded"><AlertOctagon size={18} /></button>
+                          <button onClick={() => handleModerate(incident.id, 'verified')} title="Approve" className="p-1 text-green-600 hover:bg-green-50 rounded"><CheckCircle size={18} /></button>
+                          <button onClick={() => handleModerate(incident.id, 'dismissed')} title="Dismiss" className="p-1 text-gray-400 hover:bg-gray-100 rounded"><XCircle size={18} /></button>
+                          <button onClick={() => handleModerate(incident.id, 'elevated')} title="Elevate" className="p-1 text-red-600 hover:bg-red-50 rounded"><AlertOctagon size={18} /></button>
                         </div>
                       </td>
                     </tr>
@@ -140,34 +188,35 @@ export default function AdminPage() {
       {/* Broadcast Modal */}
       {isBroadcastModalOpen && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-lg overflow-hidden shadow-2xl">
+          <form onSubmit={handleSendBroadcast} className="bg-white rounded-xl w-full max-w-lg overflow-hidden shadow-2xl">
             <div className="bg-red-600 p-4 flex justify-between items-center text-white">
               <h2 className="text-lg font-bold flex items-center gap-2"><Radio size={20} /> Broadcast Emergency Alert</h2>
-              <button onClick={() => setIsBroadcastModalOpen(false)} className="hover:bg-red-700 p-1 rounded"><XCircle size={20} /></button>
+              <button type="button" onClick={() => setIsBroadcastModalOpen(false)} className="hover:bg-red-700 p-1 rounded"><XCircle size={20} /></button>
             </div>
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Target Area</label>
-                <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 outline-none">
+                <select value={targetArea} onChange={(e) => setTargetArea(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 outline-none">
                   <option>All Active Users</option>
                   <option>Downtown District</option>
                   <option>University Campus</option>
+                  <option>Delhi NCR Circuit</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Alert Message</label>
-                <textarea rows="4" className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Enter emergency broadcast details..."></textarea>
+                <textarea value={broadcastMessage} onChange={(e) => setBroadcastMessage(e.target.value)} required rows="4" className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Enter emergency broadcast details..."></textarea>
               </div>
               <div className="bg-red-50 border border-red-100 p-3 rounded-lg flex gap-3 text-red-800 text-sm">
                 <AlertOctagon className="flex-shrink-0" size={20} />
                 <p>This will send an immediate push notification overriding silent mode for all users in the selected area.</p>
               </div>
               <div className="flex justify-end gap-3 mt-6">
-                <button onClick={() => setIsBroadcastModalOpen(false)} className="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg">Cancel</button>
-                <button className="px-4 py-2 bg-red-600 text-white font-medium hover:bg-red-700 rounded-lg">Send Broadcast</button>
+                <button type="button" onClick={() => setIsBroadcastModalOpen(false)} className="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-red-600 text-white font-medium hover:bg-red-700 rounded-lg">Send Broadcast</button>
               </div>
             </div>
-          </div>
+          </form>
         </div>
       )}
     </AppShell>

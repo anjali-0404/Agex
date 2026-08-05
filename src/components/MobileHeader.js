@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import styles from './MobileHeader.module.css';
 
 const titles = {
@@ -11,32 +12,59 @@ const titles = {
   '/community': 'Community',
   '/analytics': 'Analytics',
   '/assistant': 'Safety Assistant',
-  '/profile':   'Profile',
-  '/emergency': 'Emergency SOS',
+  '/profile':   'Profile & Contacts',
+  '/emergency': 'Emergency Hub',
   '/journey':   'Secure Journey',
-  '/places':    'Safe Places',
+  '/places':    'Safe Havens',
   '/admin':     'Admin Panel',
   '/settings':  'Settings',
 };
 
 export default function MobileHeader() {
   const pathname = usePathname();
-  const title = titles[pathname] || 'AegisAI';
+  const { user, isAuthenticated, triggerSOS } = useAuth();
+  const title = titles[pathname] || 'AegisAI India';
 
   return (
     <header className={styles.header}>
-      <div className={styles.brand}>
+      <Link href="/" className={styles.brand}>
         <div className={styles.logoBadge}>
           <span className="icon" style={{ fontSize: 18, color: '#fff' }}>shield_person</span>
         </div>
-        <span className={`${styles.title} grad-text-indigo`}>AegisAI</span>
-      </div>
-      <div className={styles.pageTitle}>{title}</div>
-      <Link href="/profile" className={styles.avatarBtn}>
-        <img
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuBsTCDzWbsWn99APYomqRDkbS5k7UncVZ_w03EAuZRonCUwvscGvzAhT0gIUajYiNYib4IYOGGdstdGezp0E1_BC1J3vB9UagdRkFbw1BJxIIv8XV1LvUV0o9THrKzkjPS57dRT5hish5X_QgWA74J_OaSSQuBdH8w-TPKdsemLiU576c9A7yae9DFG56iiEfVljHu8c6svDS86psLGXi307-_x9_fRjq8UbtcDk4IzQEEQ2NEceF5DuYzAGO4-nGOyoGRmiI3BkPgo"
-          alt="Profile" className={styles.avatar} />
+        <span className={`${styles.title} grad-text-indigo`}>Aegis Safety</span>
       </Link>
+      <div className={styles.pageTitle}>{title}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <button
+          onClick={() => triggerSOS()}
+          style={{
+            background: 'linear-gradient(135deg, #f43f5e, #e11d48)',
+            border: 'none',
+            borderRadius: '20px',
+            color: '#fff',
+            padding: '6px 12px',
+            fontSize: '11px',
+            fontWeight: '800',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4
+          }}>
+          <span className="icon" style={{ fontSize: 14 }}>emergency</span> SOS
+        </button>
+
+        {isAuthenticated && user ? (
+          <Link href="/profile" className={styles.avatarBtn}>
+            <img
+              src={user?.avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80'}
+              alt="Profile" className={styles.avatar} />
+          </Link>
+        ) : (
+          <Link href="/login" className="btn-cyan" style={{ padding: '6px 14px', fontSize: 11 }}>
+            Sign In
+          </Link>
+        )}
+      </div>
     </header>
   );
 }
+

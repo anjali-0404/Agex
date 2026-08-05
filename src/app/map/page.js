@@ -3,14 +3,16 @@ import { useState, useEffect } from 'react';
 import AppShell from '@/components/AppShell';
 import LiveMap from '@/components/LiveMap';
 import useRealtimeLocation from '@/hooks/useRealtimeLocation';
+import { useAuth } from '@/context/AuthContext';
 
 export default function SafetyMap() {
-  const { location: userLocation, loading, error: geoError } = useRealtimeLocation();
+  const { location: userLocation } = useRealtimeLocation();
+  const { triggerSOS, sharingLocation, startSharingLocation, stopSharingLocation } = useAuth();
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [searching, setSearching] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(true);
   const [activeFilter, setActiveFilter] = useState('All');
-  const [selectedMarker, setSelectedMarker] = useState(null);
   const [searchResults, setSearchResults] = useState([]);
   const [mapCenter, setMapCenter] = useState(null);
 
@@ -20,50 +22,63 @@ export default function SafetyMap() {
     }
   }, [userLocation, mapCenter]);
 
-  // Generate dynamic real-time markers around the user's live position
-  const baseLat = userLocation ? userLocation.lat : 41.8781;
-  const baseLng = userLocation ? userLocation.lng : -87.6298;
+  // Generate dynamic real-time markers around user's live position in India (New Delhi fallback)
+  const baseLat = userLocation ? userLocation.lat : 28.6139;
+  const baseLng = userLocation ? userLocation.lng : 77.2090;
 
-  const realMarkers = [
+  const realIndianMarkers = [
     {
       id: 1,
       type: 'police',
-      title: 'Local Precinct Station',
+      title: 'Connaught Place Police Station',
       lat: baseLat + 0.003,
       lng: baseLng + 0.004,
-      desc: '24/7 Active Duty Police Hub • Emergency Response Unit',
+      desc: '24/7 Active Duty Police Control Room • Emergency Unit',
+      phone: '+91 11 2336 1234',
       status: 'Active'
     },
     {
       id: 2,
       type: 'haven',
-      title: 'Verified Safe Place / Community Haven',
+      title: 'Rajiv Chowk Metro Safe Haven',
       lat: baseLat - 0.004,
       lng: baseLng + 0.002,
-      desc: 'Lit Entrance • CCTV Monitored • Emergency Calling Point',
+      desc: 'CISF Security Guarded • Lit Entrance • Emergency Calling Point',
+      phone: '112',
       status: 'Verified'
     },
     {
       id: 3,
       type: 'hazard',
-      title: 'Streetlight Outage Alert',
+      title: 'Waterlogging & Low Light Alert',
       lat: baseLat + 0.002,
       lng: baseLng - 0.005,
-      desc: 'Reported 12m ago • Dimly Lit Corridor',
+      desc: 'Reported 12m ago • Use Alternate Outer Corridor',
       status: 'Caution'
     },
     {
       id: 4,
       type: 'haven',
-      title: '24/7 Pharmacy & First Aid',
+      title: 'Apollo Pharmacy 24x7 & First Aid',
       lat: baseLat - 0.002,
       lng: baseLng - 0.003,
-      desc: 'Open All Night • Medical Aid Available',
+      desc: 'Open All Night • Emergency Medical Aid & Sanitized Safe Haven',
+      phone: '+91 98765 43210',
       status: 'Verified'
+    },
+    {
+      id: 5,
+      type: 'police',
+      title: 'Cyber City Rapid Patrol Post',
+      lat: baseLat + 0.006,
+      lng: baseLng - 0.006,
+      desc: 'Gurugram PCR Van Stationed',
+      phone: '100',
+      status: 'Active'
     }
   ];
 
-  const filteredMarkers = realMarkers.filter(m => {
+  const filteredMarkers = realIndianMarkers.filter(m => {
     if (activeFilter === 'All') return true;
     if (activeFilter === 'Police Stations') return m.type === 'police';
     if (activeFilter === 'Safe Havens') return m.type === 'haven';
@@ -71,20 +86,20 @@ export default function SafetyMap() {
     return true;
   });
 
-  // Handle Geocoding Search via OpenStreetMap Nominatim API
+  // Handle Geocoding Search via OpenStreetMap Nominatim API for Indian cities
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
     setSearching(true);
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`);
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=in&q=${encodeURIComponent(searchQuery)}`);
       const data = await res.json();
       if (data && data.length > 0) {
         const top = data[0];
         setMapCenter([parseFloat(top.lat), parseFloat(top.lon)]);
         setSearchResults(data.slice(0, 4));
       } else {
-        alert('No location found for: ' + searchQuery);
+        alert('No location found in India for: ' + searchQuery);
       }
     } catch (err) {
       console.error('Search error:', err);
@@ -93,97 +108,106 @@ export default function SafetyMap() {
     }
   };
 
-  const filters = ['All', 'Safe Routes', 'Incidents', 'Police Stations', 'Safe Havens'];
+  const filters = ['All', 'Incidents', 'Police Stations', 'Safe Havens'];
 
   return (
     <AppShell>
-      <div style={{ position: 'relative', width: '100%', height: 'calc(100vh - 80px)', overflow: 'hidden', borderRadius: 24, border: '1px solid rgba(255,255,255,0.1)' }}>
+      <div style={{ position: 'relative', width: '100%', height: 'calc(100vh - 100px)', overflow: 'hidden', borderRadius: 24, border: '1px solid rgba(255,255,255,0.1)' }}>
         
         {/* Real-time Interactive Leaflet Map */}
         <LiveMap
           userLocation={userLocation}
           markers={filteredMarkers}
           heatmap={showHeatmap}
-          zoom={15}
+          zoom={14}
           height="100%"
         />
 
         {/* Floating Top Controls: Search Bar & Filter Chips */}
-        <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', width: '92%', maxWidth: 640, display: 'flex', flexDirection: 'column', gap: 12, zIndex: 1000 }}>
+        <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', width: '92%', maxWidth: 660, display: 'flex', flexDirection: 'column', gap: 12, zIndex: 1000 }}>
           
           <form onSubmit={handleSearch} className="glass" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', borderRadius: 50, boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
             <span className="icon" style={{ color: '#22d3ee' }}>search</span>
             <input
               type="text"
-              placeholder="Search real location (e.g. Times Square, Chicago Loop...)"
+              placeholder="Search Indian location (e.g., Connaught Place, Hauz Khas, MG Road, Bandra...)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: '#f1f5f9', fontSize: 14 }}
+              style={{ flex: 1, background: 'transparent', border: 'none', color: '#fff', fontSize: 14, outline: 'none' }}
             />
-            <button type="submit" style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)', border: 'none', color: '#fff', padding: '6px 16px', borderRadius: 20, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-              {searching ? 'Searching...' : 'Search'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowHeatmap(!showHeatmap)}
-              style={{ background: showHeatmap ? 'rgba(34,211,238,0.2)' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(34,211,238,0.4)', color: showHeatmap ? '#22d3ee' : '#94a3b8', padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-              Heatmap: {showHeatmap ? 'ON' : 'OFF'}
+            <button type="submit" disabled={searching} className="btn-cyan" style={{ padding: '8px 18px', fontSize: 13 }}>
+              {searching ? 'Locating...' : 'Search'}
             </button>
           </form>
 
           {/* Filter Chips */}
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
             {filters.map((f) => (
               <button
                 key={f}
                 onClick={() => setActiveFilter(f)}
                 style={{
-                  padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, whitespace: 'nowrap',
-                  background: activeFilter === f ? 'linear-gradient(135deg, #6366f1, #a855f7)' : 'rgba(8,12,24,0.85)',
-                  border: activeFilter === f ? '1px solid #a855f7' : '1px solid rgba(255,255,255,0.1)',
-                  color: '#fff', backdropFilter: 'blur(10px)', cursor: 'pointer', transition: 'all 0.2s ease'
+                  background: activeFilter === f ? '#6366f1' : 'rgba(8, 12, 24, 0.75)',
+                  backdropFilter: 'blur(12px)',
+                  color: '#fff',
+                  border: activeFilter === f ? '1px solid #818cf8' : '1px solid rgba(255,255,255,0.15)',
+                  padding: '6px 14px',
+                  borderRadius: 20,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                  cursor: 'pointer'
                 }}>
                 {f}
               </button>
             ))}
-          </div>
-
-          {/* Search Autocomplete Results */}
-          {searchResults.length > 0 && (
-            <div className="glass" style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8, zIndex: 1001 }}>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700 }}>Search Results:</div>
-              {searchResults.map((res, i) => (
-                <div
-                  key={i}
-                  onClick={() => {
-                    setMapCenter([parseFloat(res.lat), parseFloat(res.lon)]);
-                    setSearchResults([]);
-                  }}
-                  style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', cursor: 'pointer', fontSize: 13, color: '#f1f5f9' }}>
-                  📍 {res.display_name}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Live GPS Status Pill Bottom-Left */}
-        <div className="glass" style={{ position: 'absolute', bottom: 24, left: 24, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, zIndex: 1000 }}>
-          <span className="pulse-dot pulse-dot-cyan" />
-          <div style={{ fontSize: 12 }}>
-            <span style={{ fontWeight: 700, color: '#22d3ee' }}>GPS Tracking: Active</span>
-            <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: 11 }}>
-              {userLocation ? `Lat: ${userLocation.lat.toFixed(4)}, Lng: ${userLocation.lng.toFixed(4)}` : 'Acquiring GPS...'}
-            </span>
+            <button
+              onClick={() => setShowHeatmap(!showHeatmap)}
+              style={{
+                background: showHeatmap ? 'rgba(34,211,238,0.2)' : 'rgba(8, 12, 24, 0.75)',
+                color: showHeatmap ? '#22d3ee' : '#94a3b8',
+                border: showHeatmap ? '1px solid #22d3ee' : '1px solid rgba(255,255,255,0.15)',
+                padding: '6px 14px',
+                borderRadius: 20,
+                fontSize: 12,
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                cursor: 'pointer'
+              }}>
+              🔥 Heatmap {showHeatmap ? 'ON' : 'OFF'}
+            </button>
           </div>
         </div>
 
-        {/* Legend Card Bottom-Right */}
-        <div className="glass" style={{ position: 'absolute', bottom: 24, right: 24, padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 6, zIndex: 1000, fontSize: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ width: 10, height: 10, borderRadius: '50%', background: '#22d3ee', boxShadow: '0 0 8px #22d3ee' }} /> Your Live GPS Location</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ width: 10, height: 10, borderRadius: '50%', background: '#6366f1' }} /> Police Precinct</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981' }} /> Verified Safe Place</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }} /> Active Caution Alert</div>
+        {/* Floating Bottom Live Location & SOS Quick Bar */}
+        <div style={{
+          position: 'absolute',
+          bottom: 24,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1000,
+          display: 'flex',
+          gap: 12,
+          background: 'rgba(8, 12, 24, 0.85)',
+          backdropFilter: 'blur(16px)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          padding: '10px 18px',
+          borderRadius: 40,
+          boxShadow: '0 10px 36px rgba(0,0,0,0.6)'
+        }}>
+          <button
+            onClick={() => sharingLocation ? stopSharingLocation() : startSharingLocation(userLocation)}
+            className="btn-cyan"
+            style={{ padding: '8px 18px', fontSize: 13 }}>
+            <span className="icon">{sharingLocation ? 'location_off' : 'share_location'}</span>
+            {sharingLocation ? 'Stop Sharing' : 'Share Live GPS'}
+          </button>
+          <button
+            onClick={() => triggerSOS(userLocation)}
+            className="btn-sos"
+            style={{ padding: '8px 20px', fontSize: 13 }}>
+            <span className="icon">emergency</span> Rapid SOS
+          </button>
         </div>
 
       </div>
